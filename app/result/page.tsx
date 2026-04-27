@@ -1,12 +1,21 @@
 "use client";
 
+import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function Result() {
+// --- 1. THE CONTENT COMPONENT ---
+// This part uses useSearchParams, so it MUST be inside a Suspense boundary.
+function ItineraryContent() {
   const params = useSearchParams();
-  const data = JSON.parse(params.get("data") || "{}");
-
-  const itinerary = data.itinerary || {};
+  
+  // Safely parse the data
+  let itinerary: any = {};
+  try {
+    const data = JSON.parse(params.get("data") || "{}");
+    itinerary = data.itinerary || {};
+  } catch (e) {
+    console.error("Failed to parse itinerary data", e);
+  }
 
   return (
     <div style={styles.container}>
@@ -24,13 +33,11 @@ export default function Result() {
       {itinerary.days?.map((day: any, i: number) => (
         <div key={i} style={styles.card}>
           <h2>📅 {day.day} - {day.title}</h2>
-
           <ul>
             {day.activities?.map((act: string, j: number) => (
               <li key={j} style={styles.listItem}>{act}</li>
             ))}
           </ul>
-
           <p><b>🍽 Food:</b> {day.food}</p>
           <p><b>🏨 Stay:</b> {day.stay}</p>
         </div>
@@ -49,12 +56,10 @@ export default function Result() {
       {/* TRAVEL OPTIONS */}
       <div style={styles.card}>
         <h2>🚗 Travel Options</h2>
-
         <h3>To Destination</h3>
         {itinerary.travelOptions?.toDestination?.map((t: any, i: number) => (
           <p key={i}>➡ {t.mode} - {t.details} (₹{t.cost})</p>
         ))}
-
         <h3>Local Transport</h3>
         {itinerary.travelOptions?.localTransport?.map((t: any, i: number) => (
           <p key={i}>➡ {t.mode} (₹{t.cost})</p>
@@ -101,6 +106,21 @@ export default function Result() {
   );
 }
 
+// --- 2. THE MAIN PAGE COMPONENT ---
+// This is what Next.js renders. It wraps the content in Suspense.
+export default function Result() {
+  return (
+    <Suspense fallback={
+      <div style={styles.container}>
+        <h1 style={styles.title}>Loading your itinerary...</h1>
+      </div>
+    }>
+      <ItineraryContent />
+    </Suspense>
+  );
+}
+
+// --- 3. STYLES ---
 const styles: any = {
   container: {
     maxWidth: "900px",
@@ -108,6 +128,7 @@ const styles: any = {
     padding: "20px",
     fontFamily: "Segoe UI, sans-serif",
     background: "#f5f7fb",
+    minHeight: "100vh",
   },
   title: {
     textAlign: "center",

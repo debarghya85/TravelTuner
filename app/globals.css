@@ -1,0 +1,160 @@
+/* =========================
+   DESIGN SYSTEM (PRO UI)
+========================= */
+
+:root {
+  --bg: #ffffff;
+  --surface: #ffffff;
+  --border: #e5e7eb;
+  --text: #111827;
+  --muted: #6b7280;
+  --primary: #111827;
+  --ring: rgba(0, 0, 0, 0.08);
+}
+
+/* RESET */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  background: var(--bg);
+  color: var(--text);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 24px;
+}
+
+/* =========================
+   TYPOGRAPHY
+========================= */
+
+.h1 {
+  font-size: 26px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.subtext {
+  color: var(--muted);
+  font-size: 14px;
+  margin-top: 6px;
+}
+
+/* =========================
+   FORM GRID SYSTEM (IMPORTANT)
+========================= */
+
+.grid {
+  display: grid;
+  gap: 16px;
+}
+
+.grid-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.grid-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 768px) {
+  .grid-2,
+  .grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   FORM ELEMENTS
+========================= */
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.input,
+.select,
+.textarea {
+  height: 42px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  outline: none;
+  font-size: 14px;
+  transition: 0.15s ease;
+  background: white;
+}
+
+.textarea {
+  height: 100px;
+  resize: none;
+}
+
+.input:focus,
+.select:focus,
+.textarea:focus {
+  border-color: #111827;
+  box-shadow: 0 0 0 3px var(--ring);
+}
+
+/* =========================
+   BUTTON (IMPORTANT)
+========================= */
+
+.btn {
+  width: 100%;
+  height: 44px;
+  border: none;
+  border-radius: 10px;
+  background: var(--primary);
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.btn:hover {
+  opacity: 0.92;
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* =========================
+   SECTION TITLE
+========================= */
+
+.section-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #374151;
+  margin: 24px 0 12px;
+  letter-spacing: 0.3px;
+  text-transform: uppercase;
+}

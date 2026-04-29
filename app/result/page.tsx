@@ -98,7 +98,7 @@ function ItineraryContent() {
 
       <button
         style={styles.button}
-        onClick={() => (window.location.href = "/form")}
+        onClick={() => (window.location.href = "/")}
       >
         🔄 Plan Another Trip
       </button>

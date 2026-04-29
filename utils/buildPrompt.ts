@@ -54,7 +54,10 @@ PLANNING RULES (VERY IMPORTANT)
 
 6. STAY RULE:
    - If budget is low → budget hotels / guest houses
-   - Show 1–2 realistic stay options only
+   - ALWAYS provide minimum 2 and maximum 3 stay options
+   - Options should vary (budget / mid-range / location-based)
+   - All options must fit within overall trip budget
+   - Do NOT repeat similar hotels
 
 7. FOOD RULE:
    - Use realistic Indian meal costs
@@ -76,6 +79,7 @@ Ensure:
 - No trailing commas
 - No string numbers (all numbers must be numeric)
 - No null values unless necessary
+- "stayOptions" MUST contain at least 2 and up to 3 options (no less than 2)
 
 ====================
 OUTPUT FORMAT
@@ -111,6 +115,11 @@ OUTPUT FORMAT
       "name": "real hotel/guest house type",
       "location": "area name",
       "pricePerNight": 0
+    },
+    {
+      "name": "second option (different type/location)",
+      "location": "area name",
+      "pricePerNight": 0
     }
   ],
   "foodOptions": [
@@ -144,6 +153,7 @@ FINAL VALIDATION CHECK (SELF VERIFY BEFORE OUTPUT)
 - Does JSON parse correctly?
 - Are activities realistic for 1 day?
 - Are costs aligned with Indian pricing?
+- Are there at least 2 stay options?
 
 Return ONLY the JSON.
 `;

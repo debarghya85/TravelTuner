@@ -40,6 +40,7 @@ export default function Form() {
 
   const [loading, setLoading] = useState(false);
   const [index, setIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   const [form, setForm] = useState<any>({
     source: "",
@@ -61,6 +62,19 @@ export default function Form() {
     return () => clearInterval(interval);
   }, []);
 
+  /* 📱 RESPONSIVE DETECTION */
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkMobile();
+
+    window.addEventListener("resize", checkMobile);
+
+    return () => window.removeEventListener("resize", checkMobile);
+  }, []);
+
   const getImg = (i: number) =>
     travelImages[(index + i) % travelImages.length];
 
@@ -71,6 +85,7 @@ export default function Form() {
   const toggleInterest = (value: string) => {
     setForm((prev: any) => {
       const exists = prev.interests.includes(value);
+
       return {
         ...prev,
         interests: exists
@@ -103,6 +118,7 @@ export default function Form() {
       });
 
       const data = await res.json();
+
       router.push(`/result?data=${encodeURIComponent(JSON.stringify(data))}`);
     } finally {
       setLoading(false);
@@ -133,8 +149,9 @@ export default function Form() {
   return (
     <div
       style={{
-        height: "100vh",
+        minHeight: "100vh",
         display: "flex",
+        flexDirection: isMobile ? "column" : "row",
         overflow: "hidden",
         background:
           "linear-gradient(135deg,#e0f2fe 0%,#fff7ed 50%,#ffffff 100%)"
@@ -148,7 +165,8 @@ export default function Form() {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          padding: "20px"
+          padding: isMobile ? "14px" : "20px",
+          order: isMobile ? 2 : 1
         }}
       >
         <form
@@ -157,50 +175,122 @@ export default function Form() {
             width: "100%",
             maxWidth: "650px",
             background: "white",
-            padding: "22px",
+            padding: isMobile ? "18px" : "22px",
             borderRadius: "16px",
             boxShadow: "0 25px 60px rgba(0,0,0,0.10)"
           }}
         >
 
-          <h1 style={{ fontSize: "24px", fontWeight: 800 }}>
-            🌍 Explore the Incredible World of Travel
-          </h1>
+          {/* DESKTOP LOGO */}
+          {!isMobile && (
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                marginBottom: "10px"
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="Travel Tuner"
+                style={{
+                  width: "320px",
+                  objectFit: "contain"
+                }}
+              />
+            </div>
+          )}
 
-          <p style={{ fontSize: "13px", color: "#64748b" }}>
+          <p
+            style={{
+              fontSize: "13px",
+              color: "#64748b",
+              textAlign: "center",
+              marginBottom: "8px"
+            }}
+          >
             Plan your next travel in seconds
           </p>
 
           {/* GRID */}
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px", marginTop: "10px" }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
+              gap: "10px",
+              marginTop: "10px"
+            }}
+          >
 
             <div>
-              <div style={labelStyle}><MapPin size={14} /> From</div>
-              <input name="source" onChange={handleChange} style={inputStyle} />
+              <div style={labelStyle}>
+                <MapPin size={14} /> From
+              </div>
+
+              <input
+                name="source"
+                onChange={handleChange}
+                style={inputStyle}
+              />
             </div>
 
             <div>
-              <div style={labelStyle}><MapPin size={14} /> To</div>
-              <input name="destination" onChange={handleChange} style={inputStyle} />
+              <div style={labelStyle}>
+                <MapPin size={14} /> To
+              </div>
+
+              <input
+                name="destination"
+                onChange={handleChange}
+                style={inputStyle}
+              />
             </div>
 
             <div>
-              <div style={labelStyle}><Calendar size={14} /> Days</div>
-              <input name="days" type="number" min={1} onChange={handleChange} style={inputStyle} />
+              <div style={labelStyle}>
+                <Calendar size={14} /> Days
+              </div>
+
+              <input
+                name="days"
+                type="number"
+                min={1}
+                onChange={handleChange}
+                style={inputStyle}
+              />
             </div>
 
             <div>
-              <div style={labelStyle}><Wallet size={14} /> Budget</div>
-              <input name="budget" type="number" onChange={handleChange} style={inputStyle} />
+              <div style={labelStyle}>
+                <Wallet size={14} /> Budget
+              </div>
+
+              <input
+                name="budget"
+                type="number"
+                onChange={handleChange}
+                style={inputStyle}
+              />
             </div>
 
           </div>
 
           {/* STYLE */}
           <div style={{ marginTop: "12px" }}>
-            <div style={labelStyle}><Plane size={14} /> Travel Style</div>
-            <select name="travelStyle" onChange={handleChange} style={inputStyle} defaultValue="">
-              <option value="" disabled>Select style</option>
+            <div style={labelStyle}>
+              <Plane size={14} /> Travel Style
+            </div>
+
+            <select
+              name="travelStyle"
+              onChange={handleChange}
+              style={inputStyle}
+              defaultValue=""
+            >
+              <option value="" disabled>
+                Select style
+              </option>
+
               <option value="budget">Budget</option>
               <option value="comfort">Comfort</option>
               <option value="luxury">Luxury</option>
@@ -208,10 +298,19 @@ export default function Form() {
           </div>
 
           {/* INTERESTS */}
-          <div style={{ marginTop: "12px" }}>
-            <div style={labelStyle}><Heart size={14} /> Interests</div>
+          {/* <div style={{ marginTop: "12px" }}>
+            <div style={labelStyle}>
+              <Heart size={14} /> Interests
+            </div>
 
-            <div style={{ display: "flex", flexWrap: "wrap", gap: "6px", marginTop: "6px" }}>
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: "6px",
+                marginTop: "6px"
+              }}
+            >
               {interestOptions.map((item) => {
                 const active = form.interests.includes(item);
 
@@ -234,7 +333,7 @@ export default function Form() {
                 );
               })}
             </div>
-          </div>
+          </div> */}
 
           <textarea
             name="preferences"
@@ -276,46 +375,80 @@ export default function Form() {
       {/* ================= RIGHT CAROUSEL ================= */}
       <div
         style={{
-          flex: 3,
+          flex: isMobile ? "unset" : 3,
           display: "flex",
+          flexDirection: "column",
           alignItems: "stretch",
           justifyContent: "center",
           padding: "14px",
-          height: "100vh"
+          height: isMobile ? "180px" : "100vh",
+          order: isMobile ? 1 : 2
         }}
       >
+
+        {/* MOBILE LOGO */}
+        {isMobile && (
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "center",
+              marginBottom: "10px"
+            }}
+          >
+            <img
+              src="/logo.png"
+              alt="Travel Tuner"
+              style={{
+                width: "180px",
+                objectFit: "contain"
+              }}
+            />
+          </div>
+        )}
+
         <div
           style={{
             width: "100%",
             height: "100%",
-            display: "flex",
-            flexDirection: "column",
+            display: "grid",
+            gridTemplateColumns: isMobile
+              ? "repeat(3,1fr)"
+              : "1fr",
+            gridTemplateRows: isMobile
+              ? "1fr"
+              : "repeat(4,1fr)",
             gap: "12px",
             justifyContent: "center"
           }}
         >
 
-          {/* 4 IMAGE STACK */}
-          {[0, 1, 2, 3].map((i) => (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                borderRadius: "14px",
-                overflow: "hidden",
-                boxShadow: "0 12px 30px rgba(0,0,0,0.18)"
-              }}
-            >
-              <img
-                src={getImg(i)}
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover"
-                }}
-              />
-            </div>
-          ))}
+          
+{/* IMAGES */}
+{(isMobile ? [0, 1, 2] : [0, 1, 2, 3]).map((i) => (
+  <div
+    key={i}
+    style={{
+      borderRadius: "14px",
+      overflow: "hidden",
+      boxShadow: "0 12px 30px rgba(0,0,0,0.18)",
+
+      /* 📱 MOBILE SQUARE */
+      aspectRatio: isMobile ? "1 / 1" : "unset",
+
+      /* 💻 DESKTOP ORIGINAL */
+      height: isMobile ? "auto" : "100%"
+    }}
+  >
+    <img
+      src={getImg(i)}
+      style={{
+        width: "100%",
+        height: "100%",
+        objectFit: "cover"
+      }}
+    />
+  </div>
+))}
 
         </div>
       </div>

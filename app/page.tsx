@@ -380,7 +380,7 @@ export default function Form() {
           flexDirection: "column",
           alignItems: "stretch",
           justifyContent: "center",
-          padding: "14px",
+          padding: "22px 14px",
           height: isMobile ? "180px" : "100vh",
           order: isMobile ? 1 : 2
         }}

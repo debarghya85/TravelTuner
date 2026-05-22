@@ -50,6 +50,48 @@ function useResponsive() {
 }
 
 // =========================
+// TRANSPORT STYLE HELPER
+// =========================
+function getTransportMeta(mode: string) {
+  const m = mode?.toLowerCase();
+
+  switch (m) {
+    case "flight":
+    case "plane":
+      return {
+        icon: "✈",
+        bg: "linear-gradient(to right, #7c3aed, #a855f7)",
+      };
+
+    case "train":
+      return {
+        icon: "🚆",
+        bg: "linear-gradient(to right, #2563eb, #3b82f6)",
+      };
+
+    case "bus":
+      return {
+        icon: "🚌",
+        bg: "linear-gradient(to right, #ea580c, #fb923c)",
+      };
+
+    case "cab":
+    case "taxi":
+    case "auto":
+      return {
+        icon: "🚕",
+        bg: "linear-gradient(to right, #0f766e, #14b8a6)",
+      };
+
+    default:
+      return {
+        icon: "🚗",
+        bg: "linear-gradient(to right, #475569, #64748b)",
+      };
+  }
+}
+
+// =========================
 // CONTENT COMPONENT
 // =========================
 function ItineraryContent() {
@@ -278,6 +320,9 @@ function ItineraryContent() {
             const expanded =
               expandedTravel.includes(i);
 
+            const transport =
+              getTransportMeta(t.mode);
+
             return (
               <div
                 key={i}
@@ -305,10 +350,13 @@ function ItineraryContent() {
                     }
                   >
                     <div
-                      style={
-                        styles.transportBadge
-                      }
+                      style={{
+                        ...styles.transportBadge,
+                        background:
+                          transport.bg,
+                      }}
                     >
+                      {transport.icon}{" "}
                       {t.mode?.toUpperCase()}
                     </div>
 
@@ -800,39 +848,40 @@ const styles: any = {
     fontWeight: "800",
     color: "#0f172a",
   },
- button: {
-  border: "none",
 
-  background:
-    "linear-gradient(to right, #2563eb, #3b82f6)",
+  button: {
+    border: "none",
 
-  color: "#fff",
+    background:
+      "linear-gradient(to right, #2563eb, #3b82f6)",
 
-  padding: "16px 22px",
+    color: "#fff",
 
-  borderRadius: "16px",
+    padding: "16px 22px",
 
-  cursor: "pointer",
+    borderRadius: "16px",
 
-  fontWeight: "800",
+    cursor: "pointer",
 
-  fontSize: "16px",
+    fontWeight: "800",
 
-  boxShadow:
-    "0 8px 20px rgba(37,99,235,0.28)",
+    fontSize: "16px",
 
-  width: "100%",
+    boxShadow:
+      "0 8px 20px rgba(37,99,235,0.28)",
 
-  maxWidth: "420px",
+    width: "100%",
 
-  display: "block",
+    maxWidth: "420px",
 
-  margin: "40px auto 0",
+    display: "block",
 
-  boxSizing: "border-box",
+    margin: "40px auto 0",
 
-  transition: "0.3s ease",
-},
+    boxSizing: "border-box",
+
+    transition: "0.3s ease",
+  },
 
   card: {
     background: "#ffffff",
@@ -934,14 +983,17 @@ const styles: any = {
   },
 
   transportBadge: {
-    background:
-      "linear-gradient(to right, #2563eb, #3b82f6)",
     color: "#fff",
-    padding: "8px 14px",
+    padding: "10px 16px",
     borderRadius: "999px",
-    fontSize: "12px",
-    fontWeight: "700",
+    fontSize: "13px",
+    fontWeight: "800",
     flexShrink: 0,
+    display: "flex",
+    alignItems: "center",
+    gap: "6px",
+    boxShadow:
+      "0 4px 14px rgba(0,0,0,0.12)",
   },
 
   transportTitle: {

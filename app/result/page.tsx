@@ -739,6 +739,13 @@ function ItineraryContent() {
           }
         )}
       </div>
+
+      <button
+        style={styles.button}
+        onClick={() => (window.location.href = "/")}
+      >
+        🔄 Plan Another Trip
+      </button>
     </div>
   );
 }
@@ -793,6 +800,39 @@ const styles: any = {
     fontWeight: "800",
     color: "#0f172a",
   },
+ button: {
+  border: "none",
+
+  background:
+    "linear-gradient(to right, #2563eb, #3b82f6)",
+
+  color: "#fff",
+
+  padding: "16px 22px",
+
+  borderRadius: "16px",
+
+  cursor: "pointer",
+
+  fontWeight: "800",
+
+  fontSize: "16px",
+
+  boxShadow:
+    "0 8px 20px rgba(37,99,235,0.28)",
+
+  width: "100%",
+
+  maxWidth: "420px",
+
+  display: "block",
+
+  margin: "40px auto 0",
+
+  boxSizing: "border-box",
+
+  transition: "0.3s ease",
+},
 
   card: {
     background: "#ffffff",

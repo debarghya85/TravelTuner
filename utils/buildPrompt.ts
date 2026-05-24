@@ -22,6 +22,8 @@ Budget (INR): ${data.budget}
 Travel Style: ${data.travelStyle || "budget"}
 Interests: ${data.interests || "general"}
 Travelers: ${data.travelers || "solo"}
+Adults (>=10 Years): ${data.adults || 1}
+Children (<10 Years): ${data.children || 0}
 Month: ${data.month || "any"}
 Preferences: ${data.preferences || "none"}
 
@@ -55,7 +57,25 @@ PLANNING RULES (VERY IMPORTANT)
    - Breakdown must match total cost exactly:
      transport + stay + food + activities = totalEstimatedCost
 
-6. STAY RULE:
+6. FAMILY & OCCUPANCY RULE:
+   - Budget calculations MUST consider:
+     - number of adults
+     - number of children
+   - Room allocation must be realistic:
+     - 1–2 adults → 1 room
+     - families with children may require:
+       - extra bed
+       - family room
+       - multiple rooms
+   - Hotel pricing MUST reflect:
+     - total people count
+     - occupancy type
+     - extra mattress/bed charges if needed
+   - Mention clearly:
+     - how many adults and children the pricing is for
+   - Food and local transport cost must scale according to traveler count
+
+7. STAY RULE:
    - If budget is low → budget hotels / guest houses
    - ALWAYS provide minimum 2 and maximum 4 stay options
    - Options should vary:
@@ -66,18 +86,35 @@ PLANNING RULES (VERY IMPORTANT)
      - hotel name
      - location
      - room category
+     - occupancy supported
+     - number of rooms required
+     - extra bed availability
      - amenities
      - price per night
+     - total stay cost
      - rating
+     - realistic hotel search keyword
+     - google maps search link
+   - Google Maps link format MUST be:
+     https://www.google.com/maps/search/?api=1&query=HOTEL_NAME_LOCATION
+   - Example:
+     https://www.google.com/maps/search/?api=1&query=Mayfair%20Darjeeling%20Mall%20Road
+   - DO NOT generate fake image URLs
+   - DO NOT generate fake hotel websites
    - All options must fit within overall trip budget
    - Do NOT repeat similar hotels
+   - Hotel recommendations must match traveler composition:
+     - solo
+     - couples
+     - families
+     - groups
 
-7. FOOD RULE:
+8. FOOD RULE:
    - Use realistic Indian meal costs
    - Prefer local food options
    - Mention famous local dishes if relevant
 
-8. TRANSPORT RULE:
+9. TRANSPORT RULE:
    - ALWAYS provide multiple transport options whenever available
    - For trains/flights/buses include:
      - operator/train name
@@ -87,14 +124,27 @@ PLANNING RULES (VERY IMPORTANT)
      - duration
      - class/category
      - estimated price
+     - frequency if relevant
+     - notes about convenience
    - Show at least:
      - 2 train options OR
      - 2 flight options
-     - if available
+     - whenever realistically available
+   - Examples:
+     - Darjeeling:
+       - Darjeeling Mail
+       - Padatik Express
+       - Kanchan Kanya Express
+     - Flights:
+       - Indigo
+       - Air India
+       - Akasa Air
+       - AirAsia
    - Prioritize:
      - cheapest
-     - most convenient
-     - overnight options for savings
+     - fastest
+     - overnight savings
+     - best timing convenience
    - Local transport should include realistic daily transport methods
 
 ====================
@@ -120,8 +170,17 @@ OUTPUT FORMAT
 
 {
   "summary": "string",
+
   "destination": "${data.destination}",
+
   "bestTimeToVisit": "string",
+
+  "travelerInfo": {
+    "adults": 0,
+    "children": 0,
+    "totalTravelers": 0,
+    "pricingCalculatedFor": "2 adults + 1 child"
+  },
 
   "totalEstimatedCost": 0,
 
@@ -153,9 +212,13 @@ OUTPUT FORMAT
 
         "duration": "7h 45m",
 
+        "frequency": "daily / weekly",
+
         "class": "Sleeper / 3A / Economy",
 
         "cost": 0,
+
+        "availableFor": "2 adults + 1 child",
 
         "notes": "overnight journey / fastest route / cheapest option"
       }
@@ -182,9 +245,21 @@ OUTPUT FORMAT
 
       "roomCategory": "Deluxe Room / Standard AC Room",
 
+      "occupancy": "2 adults + 1 child",
+
+      "roomsRequired": 1,
+
+      "extraBed": true,
+
       "pricePerNight": 0,
 
+      "totalStayCost": 0,
+
       "rating": 0,
+
+      "hotelSearchKeyword": "Mayfair Darjeeling Mall Road",
+
+      "googleMapsLink": "https://www.google.com/maps/search/?api=1&query=Mayfair%20Darjeeling%20Mall%20Road",
 
       "amenities": [
         "WiFi",
@@ -257,6 +332,10 @@ FINAL VALIDATION CHECK (SELF VERIFY BEFORE OUTPUT)
 - Are there multiple transport options?
 - Are costs aligned with Indian pricing?
 - Are there at least 2 stay options?
+- Are hotel costs calculated based on adults and children?
+- Are room counts realistic?
+- Are valid Google Maps links present?
+- Are multiple realistic train/flight options included?
 
 Return ONLY the JSON.
 `;

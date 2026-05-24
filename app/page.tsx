@@ -162,6 +162,8 @@ export default function Form() {
         width: "100%",
         minHeight: "100vh",
         overflow: "hidden",
+        overflowX: "hidden",
+        maxWidth: "100vw",
         background:
           "linear-gradient(180deg,#edf4ff 0%, #ffffff 45%, #ffffff 100%)",
       }}
@@ -171,7 +173,9 @@ export default function Form() {
           width: "100%",
           maxWidth: "1600px",
           margin: "0 auto",
-          padding: isMobile ? "10px" : "18px",
+          padding: isMobile ? "8px" : "18px",
+          boxSizing: "border-box",
+          overflowX: "hidden",
         }}
       >
         <div
@@ -179,13 +183,13 @@ export default function Form() {
             position: "relative",
             width: "100%",
             minHeight: "100vh",
-            borderRadius: isMobile ? "24px" : "34px",
-            overflow: "visible", // changed
+            borderRadius: isMobile ? "18px" : "34px",
+            overflow: "hidden",
             backgroundImage: "url('/form_bg.jpg')",
             backgroundSize: "cover",
             backgroundPosition: "center",
-            margin: "-17px",
-            paddingBottom: "40px", // added
+            margin: "0",
+            paddingBottom: isMobile ? "24px" : "40px",
           }}
         >
           <div
@@ -204,9 +208,12 @@ export default function Form() {
               display: "flex",
               flexDirection: isTablet || isMobile ? "column" : "row",
               justifyContent: "space-between",
-              gap: "18px",
+              gap: isMobile ? "12px" : "18px",
               height: "100%",
-              padding: isMobile ? "18px" : "2px 36px",
+              padding: isMobile ? "14px" : "2px 36px",
+              width: "100%",
+              boxSizing: "border-box",
+              overflowX: "hidden",
             }}
           >
             {/* LEFT SECTION */}
@@ -221,17 +228,20 @@ export default function Form() {
               <div
                 style={{
                   position: "relative",
-                  display: "inline-flex",
+                  display: "flex",
                   alignItems: "center",
+                  justifyContent: isMobile ? "center" : "flex-start",
+                  width: "100%",
                 }}
               >
                 <img
                   src="/tt_logo.png"
                   alt="Travel Tuner"
                   style={{
-                    height: "180px",
+                    height: isMobile ? "110px" : "180px",
                     width: "auto",
-                    maxWidth: isMobile ? "220px" : "420px",
+                    maxWidth: isMobile ? "170px" : "420px",
+                    margin: isMobile ? "0 auto" : "0",
                     objectFit: "contain",
                     display: "block",
                   }}
@@ -268,6 +278,8 @@ export default function Form() {
                   marginTop: isMobile ? "24px" : "24px",
                   width: "100%",
                   maxWidth: "900px",
+                  boxSizing: "border-box",
+                  overflow: "hidden",
                   background: "rgba(255,255,255,0.94)",
                   backdropFilter: "blur(14px)",
                   borderRadius: isMobile ? "24px" : "28px",

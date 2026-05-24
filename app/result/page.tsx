@@ -126,26 +126,146 @@ function ItineraryContent() {
   const shareOnWhatsApp = () => {
     let text = `🌍 *TRAVEL TUNER ITINERARY*\n\n`;
 
-    text += `📍 Destination: ${itinerary.destination}\n`;
-    text += `📅 Best Time: ${itinerary.bestTimeToVisit}\n\n`;
+    // ======================================================
+    // SUMMARY
+    // ======================================================
+    text += `📍 *Destination:* ${itinerary.destination || "N/A"}\n`;
+    text += `📅 *Best Time:* ${itinerary.bestTimeToVisit || "N/A"}\n\n`;
 
-    text += `📝 ${itinerary.summary}\n\n`;
+    text += `📝 *Trip Summary*\n`;
+    text += `${itinerary.summary || ""}\n\n`;
 
+    // ======================================================
+    // TRAVELER INFO
+    // ======================================================
+    if (itinerary.travelerInfo) {
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+      text += `👨‍👩‍👧‍👦 *TRAVELER INFO*\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+
+      text += `👥 Travelers: ${itinerary.travelerInfo.travelers || 0}\n`;
+      text += `🧑 Adults: ${itinerary.travelerInfo.adults || 0}\n`;
+      text += `🧒 Children: ${itinerary.travelerInfo.children || 0}\n\n`;
+    }
+
+    // ======================================================
+    // DAY WISE PLAN
+    // ======================================================
     itinerary.days?.forEach((d: any) => {
-      text += `━━━━━━━━━━━━━━\n`;
-      text += `📅 ${d.day} - ${d.title}\n`;
-      text += `━━━━━━━━━━━━━━\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+      text += `📅 *${d.day} - ${d.title}*\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
 
+      // Timeline
       d.timeline?.forEach((t: any) => {
-        text += `• ${t.time} → ${t.activity}\n`;
+        text += `⏰ ${t.time} → ${t.activity}\n`;
       });
 
-      text += `\n🍽 ${d.food}\n`;
-      text += `🏨 ${d.stay}\n`;
-      text += `💰 ₹${d.estimatedDayCost}\n\n`;
+      // Activities
+      if (d.activities?.length > 0) {
+        text += `\n🎯 Activities:\n`;
+
+        d.activities.forEach((a: string) => {
+          text += `• ${a}\n`;
+        });
+      }
+
+      text += `\n🍽 Food: ${d.food || "N/A"}\n`;
+      text += `🏨 Stay: ${d.stay || "N/A"}\n`;
+      text += `💰 Day Cost: ₹${d.estimatedDayCost || 0}\n\n`;
     });
 
-    window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank");
+    // ======================================================
+    // STAY OPTIONS
+    // ======================================================
+    if (itinerary.stayOptions?.length > 0) {
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+      text += `🏨 *STAY OPTIONS*\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+
+      itinerary.stayOptions.forEach((s: any, i: number) => {
+        text += `${i + 1}. ${s.name}\n`;
+        text += `📍 ${s.location}\n`;
+        text += `💵 ₹${s.pricePerNight}/night\n`;
+        text += `⭐ ${s.rating}\n`;
+
+        if (s.roomCategory) {
+          text += `🛏 Room: ${s.roomCategory}\n`;
+        }
+
+        if (s.amenities?.length > 0) {
+          text += `✨ Amenities: ${s.amenities.join(", ")}\n`;
+        }
+
+        text += `\n`;
+      });
+    }
+
+    // ======================================================
+    // TRAVEL OPTIONS
+    // ======================================================
+    if (itinerary.travelOptions?.toDestination?.length > 0) {
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+      text += `🚆 *TRAVEL OPTIONS*\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+
+      itinerary.travelOptions.toDestination.forEach((t: any, i: number) => {
+        text += `${i + 1}. ${t.name}\n`;
+        text += `🚍 Mode: ${t.mode}\n`;
+        text += `🏢 Provider: ${t.provider}\n`;
+        text += `📍 ${t.from} → ${t.to}\n`;
+        text += `🕒 ${t.departureTime} → ${t.arrivalTime}\n`;
+        text += `⏱ Duration: ${t.duration}\n`;
+        text += `💰 Cost: ₹${t.cost}\n`;
+
+        if (t.class) {
+          text += `🎫 Class: ${t.class}\n`;
+        }
+
+        text += `\n`;
+      });
+    }
+
+    // ======================================================
+    // LOCAL TRANSPORT
+    // ======================================================
+    if (itinerary.travelOptions?.localTransport?.length > 0) {
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+      text += `🚕 *LOCAL TRANSPORT*\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+
+      itinerary.travelOptions.localTransport.forEach((l: any) => {
+        text += `🚖 ${l.mode}\n`;
+        text += `📝 ${l.details}\n`;
+        text += `💰 ₹${l.dailyCost}/day\n\n`;
+      });
+    }
+
+    // ======================================================
+    // BUDGET
+    // ======================================================
+    if (itinerary.costBreakdown) {
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+      text += `💰 *BUDGET BREAKDOWN*\n`;
+      text += `━━━━━━━━━━━━━━━━━━\n`;
+
+      text += `🚆 Transport: ₹${itinerary.costBreakdown.transport || 0}\n`;
+      text += `🏨 Stay: ₹${itinerary.costBreakdown.stay || 0}\n`;
+      text += `🍽 Food: ₹${itinerary.costBreakdown.food || 0}\n`;
+      text += `🎟 Activities: ₹${itinerary.costBreakdown.activities || 0}\n\n`;
+    }
+
+    // ======================================================
+    // TOTAL
+    // ======================================================
+    text += `💵 *TOTAL ESTIMATED COST:* ₹${itinerary.totalEstimatedCost || 0}\n\n`;
+
+    text += `✨ Planned with Travel Tuner`;
+
+    const whatsappUrl =
+      "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
+
+    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
   };
 
   // ======================================================

@@ -6,7 +6,7 @@ export async function POST(req: Request) {
 
   const prompt = buildPrompt(body);
 
-  const aiResponse = await callAI(prompt);
+  const aiResponse = await callAI(prompt, Number(body.days));
 
   return Response.json({
     itinerary: aiResponse,

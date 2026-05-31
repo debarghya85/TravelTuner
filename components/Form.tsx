@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { saveItinerary } from "../app/result/itinerary-data";
 
 export default function Form() {
   const [loading, setLoading] = useState(false);
@@ -31,10 +32,8 @@ export default function Form() {
 
       const data = await res.json();
 
-      // ✅ Better navigation (no full reload)
-      router.push(
-        `/result?data=${encodeURIComponent(JSON.stringify(data))}`
-      );
+      saveItinerary(data);
+      router.push("/result");
     } catch (error) {
       console.error(error);
       alert("Something went wrong!");

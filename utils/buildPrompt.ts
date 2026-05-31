@@ -47,6 +47,10 @@ PLANNING RULES (VERY IMPORTANT)
    - Avoid unnecessary movement
 
 4. ITINERARY RULE:
+   - The "days" array MUST contain exactly ${Number(data.days) || data.days} objects
+   - Generate Day 1 through Day ${Number(data.days) || data.days}; do not stop after Day 1
+   - Do not summarize multiple travel days into one object
+   - Each requested travel day must have its own unique day, title, timeline, activities, food, foodOptions, localTransport, stay, and estimatedDayCost
    - Max 4–6 activities per day
    - Each day must have a logical flow
    - No duplicate activities
@@ -113,9 +117,22 @@ PLANNING RULES (VERY IMPORTANT)
    - Use realistic Indian meal costs
    - Prefer local food options
    - Mention famous local dishes if relevant
+   - Suggest different food for different days where possible
+   - Each day should include day-specific foodOptions with breakfast/lunch/dinner or key meal highlights
+   - Avoid repeating the same dishes every day unless it is unavoidable
 
 9. TRANSPORT RULE:
    - ALWAYS provide multiple transport options whenever available
+   - Normal travel options must include BOTH:
+     - arrival options from source to destination
+     - departure/return options from destination back to source
+   - Day-wise transport must be local transport only, not arrival trains/flights/buses
+   - Day 1 must include both:
+     - arrival travel in travelOptions.toDestination
+     - local arrival transfer in days[0].localTransport, such as station/airport pickup to hotel
+   - Last day must include both:
+     - departure travel in travelOptions.returnOptions
+     - local departure transfer in that day's localTransport, such as hotel to station/airport
    - For trains/flights/buses include:
      - operator/train name
      - train number or airline
@@ -146,6 +163,17 @@ PLANNING RULES (VERY IMPORTANT)
      - overnight savings
      - best timing convenience
    - Local transport should include realistic daily transport methods
+   - Provide dayTransport with one local transport item for each day:
+     - day
+     - mode
+     - title
+     - details
+     - route or area covered
+     - duration if useful
+     - cost
+   - dayTransport should describe sightseeing/intercity/local transfers for that day, for example:
+     "Dedicated luxury SUV (Innova/Xylo) for sightseeing and intercity transfers"
+   - Also include the same day-specific local transfer/sightseeing data inside each matching days[n].localTransport array
 
 ====================
 OUTPUT RULES
@@ -161,12 +189,22 @@ Ensure:
 - No trailing commas
 - No string numbers
 - No null values unless necessary
+- "days" MUST contain exactly ${Number(data.days) || data.days} day objects
+- The day objects MUST be sequential from "Day 1" to "Day ${Number(data.days) || data.days}"
 - "stayOptions" MUST contain at least 2 options
 - "travelOptions.toDestination" MUST contain multiple options whenever available
+- "travelOptions.returnOptions" MUST contain realistic departure/return options whenever available
+- "travelOptions.dayTransport" MUST contain day-wise local transport and should not repeat arrival train/flight data
+- Day 1 localTransport MUST show pickup/transfer to hotel along with any local sightseeing transfer
+- Last day localTransport MUST show hotel-to-station/airport transfer along with any local movement
 
 ====================
 OUTPUT FORMAT
 ====================
+
+The "days" array below shows only one template object to describe the shape.
+In the actual JSON output, repeat that object with unique content until there are exactly ${Number(data.days) || data.days} day objects:
+Day 1, Day 2, Day 3 ... Day ${Number(data.days) || data.days}.
 
 {
   "summary": "string",
@@ -224,11 +262,63 @@ OUTPUT FORMAT
       }
     ],
 
+    "returnOptions": [
+      {
+        "mode": "train | flight | bus",
+
+        "provider": "Indian Railways / Indigo / Air India",
+
+        "name": "return train or flight name",
+
+        "number": "train number or flight code",
+
+        "from": "${data.destination}",
+
+        "to": "${data.source}",
+
+        "departureTime": "04:30 PM",
+
+        "arrivalTime": "10:15 PM",
+
+        "duration": "5h 45m",
+
+        "frequency": "daily / weekly",
+
+        "class": "Sleeper / 3A / Economy",
+
+        "cost": 0,
+
+        "availableFor": "2 adults + 1 child",
+
+        "notes": "best departure option / cheapest return / convenient timing"
+      }
+    ],
+
     "localTransport": [
       {
         "mode": "auto | cab | metro | rented bike",
 
         "details": "realistic usage",
+
+        "dailyCost": 0
+      }
+    ],
+
+    "dayTransport": [
+      {
+        "day": "Day 1",
+
+        "mode": "cab | auto | metro | rented bike | walking",
+
+        "title": "Local Transport",
+
+        "details": "Dedicated cab for local sightseeing and transfers",
+
+        "route": "hotel to Mall Road and nearby attractions",
+
+        "duration": "4h",
+
+        "cost": 0,
 
         "dailyCost": 0
       }
@@ -273,10 +363,12 @@ OUTPUT FORMAT
 
   "foodOptions": [
     {
+      "day": "Day 1",
+
       "type": "breakfast | lunch | dinner",
 
       "items": [
-        "local dishes"
+        "day-specific local dishes"
       ],
 
       "cost": 0
@@ -306,7 +398,41 @@ OUTPUT FORMAT
 
       "food": "what to eat realistically",
 
+      "foodOptions": [
+        {
+          "day": "Day 1",
+
+          "type": "breakfast | lunch | dinner",
+
+          "items": [
+            "day-specific local dishes"
+          ],
+
+          "cost": 0
+        }
+      ],
+
       "stay": "hotel or area name",
+
+      "localTransport": [
+        {
+          "day": "Day 1",
+
+          "mode": "cab | auto | walking",
+
+          "title": "Local Transport",
+
+          "details": "Local sightseeing transfers for this day",
+
+          "route": "areas covered",
+
+          "duration": "4h",
+
+          "cost": 0,
+
+          "dailyCost": 0
+        }
+      ],
 
       "estimatedDayCost": 0
     }
@@ -324,12 +450,19 @@ FINAL VALIDATION CHECK (SELF VERIFY BEFORE OUTPUT)
 ====================
 
 - Does total cost exceed budget? (MUST be NO)
+- Does the days array contain exactly ${Number(data.days) || data.days} objects? (MUST be YES)
+- Are all days from Day 1 to Day ${Number(data.days) || data.days} present? (MUST be YES)
 - Are all numbers valid integers?
 - Does JSON parse correctly?
 - Are activities realistic for 1 day?
 - Are train/flight timings realistic?
 - Are hotel options structured properly?
 - Are there multiple transport options?
+- Are arrival and departure travel options both present?
+- Does day-wise transport show only local/day transport, not arrival train/flight data?
+- Does Day 1 include arrival travel plus local pickup/transfer?
+- Does the last day include departure travel plus local station/airport transfer?
+- Does each day have different food suggestions where possible?
 - Are costs aligned with Indian pricing?
 - Are there at least 2 stay options?
 - Are hotel costs calculated based on adults and children?

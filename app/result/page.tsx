@@ -1,1249 +1,284 @@
 "use client";
 
-export const dynamic = "force-dynamic";
+import Link from "next/link";
+import {
+  ArrowRight,
+  BedDouble,
+  CalendarDays,
+  CarFront,
+  CheckCircle2,
+  Clock3,
+  IndianRupee,
+  MapPin,
+  ShieldCheck,
+  Sparkles,
+  Train,
+  UsersRound,
+  Utensils,
+} from "lucide-react";
+import { dayTitle, formatMoney, travelerTotal } from "./itinerary-data";
+import { EmptyItinerary, ResultFrame, useStoredItinerary } from "./ResultShell";
 
-import { Suspense, useEffect, useMemo, useState } from "react";
+export default function ResultPage() {
+  const { itinerary, ready } = useStoredItinerary();
 
-import { useSearchParams } from "next/navigation";
-
-// ======================================================
-// RESPONSIVE HOOK
-// ======================================================
-function useResponsive() {
-  const [screen, setScreen] = useState({
-    isMobile: false,
-    isTablet: false,
-    isDesktop: true,
-  });
-
-  useEffect(() => {
-    const checkScreen = () => {
-      const width = window.innerWidth;
-
-      setScreen({
-        isMobile: width < 768,
-        isTablet: width >= 768 && width < 1200,
-        isDesktop: width >= 1200,
-      });
-    };
-
-    checkScreen();
-
-    window.addEventListener("resize", checkScreen);
-
-    return () => window.removeEventListener("resize", checkScreen);
-  }, []);
-
-  return screen;
-}
-
-// ======================================================
-// TRANSPORT META
-// ======================================================
-function getTransportMeta(mode: string) {
-  const m = mode?.toLowerCase();
-
-  switch (m) {
-    case "flight":
-    case "plane":
-      return {
-        icon: "✈️",
-        bg: "linear-gradient(135deg,#7c3aed,#9333ea)",
-      };
-
-    case "train":
-      return {
-        icon: "🚆",
-        bg: "linear-gradient(135deg,#2563eb,#3b82f6)",
-      };
-
-    case "bus":
-      return {
-        icon: "🚌",
-        bg: "linear-gradient(135deg,#ea580c,#fb923c)",
-      };
-
-    case "cab":
-    case "taxi":
-      return {
-        icon: "🚕",
-        bg: "linear-gradient(135deg,#0f766e,#14b8a6)",
-      };
-
-    default:
-      return {
-        icon: "🚗",
-        bg: "linear-gradient(135deg,#334155,#64748b)",
-      };
+  if (!ready) {
+    return null;
   }
-}
 
-// ======================================================
-// MAIN CONTENT
-// ======================================================
-function ItineraryContent() {
-  const params = useSearchParams();
+  if (!itinerary) {
+    return <EmptyItinerary />;
+  }
 
-  const { isMobile, isTablet } = useResponsive();
-
-  const [expandedTravel, setExpandedTravel] = useState<number[]>([]);
-
-  const [expandedStay, setExpandedStay] = useState<number[]>([]);
-
-  // ======================================================
-  // PARSE DATA
-  // ======================================================
-  const itinerary = useMemo(() => {
-    try {
-      const data = JSON.parse(params.get("data") || "{}");
-
-      return data.itinerary || {};
-    } catch (e) {
-      console.error(e);
-
-      return {};
-    }
-  }, [params]);
-
-  // ======================================================
-  // TOGGLES
-  // ======================================================
-  const toggleTravel = (i: number) => {
-    setExpandedTravel((prev) =>
-      prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
-    );
-  };
-
-  const toggleStay = (i: number) => {
-    setExpandedStay((prev) =>
-      prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i],
-    );
-  };
-
-  // ======================================================
-  // SHARE
-  // ======================================================
-  const shareOnWhatsApp = () => {
-    let text = `🌍 *TRAVEL TUNER ITINERARY*\n\n`;
-
-    // ======================================================
-    // SUMMARY
-    // ======================================================
-    text += `📍 *Destination:* ${itinerary.destination || "N/A"}\n`;
-    text += `📅 *Best Time:* ${itinerary.bestTimeToVisit || "N/A"}\n\n`;
-
-    text += `📝 *Trip Summary*\n`;
-    text += `${itinerary.summary || ""}\n\n`;
-
-    // ======================================================
-    // TRAVELER INFO
-    // ======================================================
-    if (itinerary.travelerInfo) {
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-      text += `👨‍👩‍👧‍👦 *TRAVELER INFO*\n`;
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-
-      text += `👥 Travelers: ${itinerary.travelerInfo.travelers || 0}\n`;
-      text += `🧑 Adults: ${itinerary.travelerInfo.adults || 0}\n`;
-      text += `🧒 Children: ${itinerary.travelerInfo.children || 0}\n\n`;
-    }
-
-    // ======================================================
-    // DAY WISE PLAN
-    // ======================================================
-    itinerary.days?.forEach((d: any) => {
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-      text += `📅 *${d.day} - ${d.title}*\n`;
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-
-      // Timeline
-      d.timeline?.forEach((t: any) => {
-        text += `⏰ ${t.time} → ${t.activity}\n`;
-      });
-
-      // Activities
-      if (d.activities?.length > 0) {
-        text += `\n🎯 Activities:\n`;
-
-        d.activities.forEach((a: string) => {
-          text += `• ${a}\n`;
-        });
-      }
-
-      text += `\n🍽 Food: ${d.food || "N/A"}\n`;
-      text += `🏨 Stay: ${d.stay || "N/A"}\n`;
-      text += `💰 Day Cost: ₹${d.estimatedDayCost || 0}\n\n`;
-    });
-
-    // ======================================================
-    // STAY OPTIONS
-    // ======================================================
-    if (itinerary.stayOptions?.length > 0) {
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-      text += `🏨 *STAY OPTIONS*\n`;
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-
-      itinerary.stayOptions.forEach((s: any, i: number) => {
-        text += `${i + 1}. ${s.name}\n`;
-        text += `📍 ${s.location}\n`;
-        text += `💵 ₹${s.pricePerNight}/night\n`;
-        text += `⭐ ${s.rating}\n`;
-
-        if (s.roomCategory) {
-          text += `🛏 Room: ${s.roomCategory}\n`;
-        }
-
-        if (s.amenities?.length > 0) {
-          text += `✨ Amenities: ${s.amenities.join(", ")}\n`;
-        }
-
-        text += `\n`;
-      });
-    }
-
-    // ======================================================
-    // TRAVEL OPTIONS
-    // ======================================================
-    if (itinerary.travelOptions?.toDestination?.length > 0) {
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-      text += `🚆 *TRAVEL OPTIONS*\n`;
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-
-      itinerary.travelOptions.toDestination.forEach((t: any, i: number) => {
-        text += `${i + 1}. ${t.name}\n`;
-        text += `🚍 Mode: ${t.mode}\n`;
-        text += `🏢 Provider: ${t.provider}\n`;
-        text += `📍 ${t.from} → ${t.to}\n`;
-        text += `🕒 ${t.departureTime} → ${t.arrivalTime}\n`;
-        text += `⏱ Duration: ${t.duration}\n`;
-        text += `💰 Cost: ₹${t.cost}\n`;
-
-        if (t.class) {
-          text += `🎫 Class: ${t.class}\n`;
-        }
-
-        text += `\n`;
-      });
-    }
-
-    // ======================================================
-    // LOCAL TRANSPORT
-    // ======================================================
-    if (itinerary.travelOptions?.localTransport?.length > 0) {
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-      text += `🚕 *LOCAL TRANSPORT*\n`;
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-
-      itinerary.travelOptions.localTransport.forEach((l: any) => {
-        text += `🚖 ${l.mode}\n`;
-        text += `📝 ${l.details}\n`;
-        text += `💰 ₹${l.dailyCost}/day\n\n`;
-      });
-    }
-
-    // ======================================================
-    // BUDGET
-    // ======================================================
-    if (itinerary.costBreakdown) {
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-      text += `💰 *BUDGET BREAKDOWN*\n`;
-      text += `━━━━━━━━━━━━━━━━━━\n`;
-
-      text += `🚆 Transport: ₹${itinerary.costBreakdown.transport || 0}\n`;
-      text += `🏨 Stay: ₹${itinerary.costBreakdown.stay || 0}\n`;
-      text += `🍽 Food: ₹${itinerary.costBreakdown.food || 0}\n`;
-      text += `🎟 Activities: ₹${itinerary.costBreakdown.activities || 0}\n\n`;
-    }
-
-    // ======================================================
-    // TOTAL
-    // ======================================================
-    text += `💵 *TOTAL ESTIMATED COST:* ₹${itinerary.totalEstimatedCost || 0}\n\n`;
-
-    text += `✨ Planned with Travel Tuner`;
-
-    const whatsappUrl =
-      "https://api.whatsapp.com/send?text=" + encodeURIComponent(text);
-
-    window.open(whatsappUrl, "_blank", "noopener,noreferrer");
-  };
-
-  // ======================================================
-  // COMPONENTS
-  // ======================================================
-  const StatCard = ({ icon, title, value }: any) => (
-    <div style={styles.statCard}>
-      <div style={styles.statIcon}>{icon}</div>
-
-      <div>
-        <div style={styles.statLabel}>{title}</div>
-
-        <div style={styles.statValue}>{value}</div>
-      </div>
-    </div>
-  );
+  const days = itinerary.days || [];
+  const arrivalOptions = itinerary.travelOptions?.toDestination || [];
+  const departureOptions = itinerary.travelOptions?.returnOptions || [];
+  const travelOptions = [...arrivalOptions, ...departureOptions];
+  const stays = itinerary.stayOptions || [];
+  const local = itinerary.travelOptions?.localTransport?.[0];
 
   return (
-    <div style={styles.page}>
-      <div style={styles.container}>
-        {/* ======================================================
-            HERO
-        ====================================================== */}
-
-        {/* HERO BANNER */}
-        <div
-          style={{
-            position: "relative",
-            width: "100%",
-            aspectRatio: "2243 / 701",
-            borderRadius: isMobile ? "18px" : "30px",
-            overflow: "hidden",
-            marginBottom: "36px",
-            boxShadow: "0 20px 45px rgba(15,23,42,0.18)",
-            background: "#0f172a",
-          }}
-        >
-          {/* BANNER IMAGE */}
-          <img
-            src="/itinery_result.png"
-            alt="Travel Tuner Itinerary Banner"
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              objectPosition: "center",
-              display: "block",
-            }}
-            onError={() => {
-              console.log("Banner failed to load");
-            }}
-          />
+    <ResultFrame>
+      <section className="result-hero">
+        <div className="result-hero-copy">
+          <img src="/tt_logo.png" alt="Travel Tuner" />
+          <h1>Itinerary Results</h1>
+          <h2>{itinerary.destination || "Your Trip"}</h2>
+          <p>
+            {days.length} Days · {itinerary.travelerInfo?.adults || 0} Adults ·{" "}
+            {itinerary.travelerInfo?.children || 0} Children
+          </p>
         </div>
+        {/* <div className="result-hero-badges">
+          {[
+            {
+              title: "Smart Itineraries",
+              text: "Curated just for you",
+              Icon: Sparkles,
+            },
+            {
+              title: "Real Time Data",
+              text: "Stay updated always",
+              Icon: Clock3,
+            },
+            {
+              title: "Easy One-Plan",
+              text: "All in one place",
+              Icon: ShieldCheck,
+            },
+            {
+              title: "Fully Customizable",
+              text: "Your trip, your way",
+              Icon: CheckCircle2,
+            },
+          ].map(({ title, text, Icon }) => {
+            const BadgeIcon = Icon;
+            return (
+              <div className="hero-badge" key={title}>
+                <BadgeIcon size={20} />
+                <strong>{title}</strong>
+                <span>{text}</span>
+              </div>
+            );
+          })}
+        </div> */}
+      </section>
 
-        {/* ======================================================
-            SUMMARY
-        ====================================================== */}
+      {/* <Link className="review-strip" href={days[0] ? "/result/day/1" : "/result"}>
+        <Sparkles size={22} />
+        <div>
+          <strong>Create trips that win the right plan.</strong>
+          <span>Review your itinerary and get ready to explore.</span>
+        </div>
+        <ArrowRight size={20} />
+      </Link> */}
 
-        <section style={styles.sectionCard}>
-          <div style={styles.sectionHeader}>📌 Summary</div>
+      <div className="overview-grid">
+        <section className="result-card summary-card">
+          <div className="section-title-row">
+            <span className="soft-icon rose">
+              <MapPin size={20} />
+            </span>
+            <h2>Summary</h2>
+          </div>
+          <p>{itinerary.summary}</p>
 
-          <p style={styles.summaryText}>{itinerary.summary}</p>
-
-          <div
-            style={{
-              ...styles.summaryGrid,
-              gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            }}
-          >
-            <div style={styles.summaryBox}>
-              <div style={styles.summaryLabel}>📍 Destination</div>
-
-              <div style={styles.summaryValue}>{itinerary.destination}</div>
+          <div className="mini-grid">
+            <div className="mini-tile">
+              <MapPin size={20} />
+              <span>Destination</span>
+              <strong>{itinerary.destination}</strong>
             </div>
-
-            <div style={styles.summaryBox}>
-              <div style={styles.summaryLabel}>📅 Best Time</div>
-
-              <div style={styles.summaryValue}>{itinerary.bestTimeToVisit}</div>
+            <div className="mini-tile">
+              <CalendarDays size={20} />
+              <span>Best Time</span>
+              <strong>{itinerary.bestTimeToVisit}</strong>
             </div>
           </div>
         </section>
 
-        {/* ======================================================
-            TRAVELER INFO
-        ====================================================== */}
-
-        {itinerary.travelerInfo && (
-          <section style={styles.sectionCard}>
-            <div style={styles.sectionHeader}>👨‍👩‍👧‍👦 Traveler Information</div>
-
-            <div
-              style={{
-                ...styles.statsGrid,
-                gridTemplateColumns: isMobile
-                  ? "1fr"
-                  : isTablet
-                    ? "repeat(2,1fr)"
-                    : "repeat(3,1fr)",
-              }}
-            >
-              <StatCard
-                icon="👥"
-                title="Travelers"
-                value={itinerary.travelerInfo.travelers}
-              />
-
-              <StatCard
-                icon="🧑"
-                title="Adults"
-                value={itinerary.travelerInfo.adults}
-              />
-
-              <StatCard
-                icon="🧒"
-                title="Children"
-                value={itinerary.travelerInfo.children}
-              />
+        <section className="result-card traveler-card">
+          <div className="section-title-row">
+            <span className="soft-icon green">
+              <UsersRound size={20} />
+            </span>
+            <h2>Traveler Information</h2>
+          </div>
+          <div className="traveler-stats">
+            <div>
+              <UsersRound size={22} />
+              <span>Travelers</span>
+              <strong>{travelerTotal(itinerary)}</strong>
             </div>
-          </section>
-        )}
-
-        {/* ======================================================
-            DAYS
-        ====================================================== */}
-
-        {itinerary.days?.map((day: any, i: number) => (
-          <section key={i} style={styles.dayCard}>
-            <div style={styles.dayHeader}>
-              📅 {day.day} - {day.title}
+            <div>
+              <UsersRound size={22} />
+              <span>Adults</span>
+              <strong>{itinerary.travelerInfo?.adults || 0}</strong>
             </div>
+            <div>
+              <UsersRound size={22} />
+              <span>Children</span>
+              <strong>{itinerary.travelerInfo?.children || 0}</strong>
+            </div>
+          </div>
+        </section>
+      </div>
 
-            <div
-              style={{
-                display: "grid",
-                gridTemplateColumns: isMobile ? "1fr" : "1.3fr .7fr",
-                gap: "28px",
-              }}
-            >
-              {/* LEFT */}
+      <div className="dashboard-grid">
+        <section className="result-card itinerary-overview">
+          <div className="section-title-row">
+            <span className="soft-icon blue">
+              <CalendarDays size={20} />
+            </span>
+            <h2>Itinerary Overview</h2>
+          </div>
+
+          <div className="day-list">
+            {days.map((day, index) => (
+              <Link
+                href={`/result/day/${index + 1}`}
+                className="day-row"
+                key={`${day.day}-${index}`}
+              >
+                <span className="day-calendar">
+                  <CalendarDays size={18} />
+                </span>
+                <div>
+                  <strong>{dayTitle(day, index)}</strong>
+                  <p>
+                    {day.timeline?.[0]?.activity ||
+                      day.activities?.[0] ||
+                      "Detailed plan"}
+                  </p>
+                </div>
+                <span className="day-chips">
+                  {day.food ? <Utensils size={16} /> : null}
+                  {day.stay ? <BedDouble size={16} /> : null}
+                  {day.activities?.length ? <MapPin size={16} /> : null}
+                </span>
+                <ArrowRight size={18} />
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        <div className="side-stack">
+          <section className="result-card compact-card">
+            <div className="section-title-row">
+              <span className="soft-icon amber">
+                <IndianRupee size={20} />
+              </span>
+              <h2>Budget Breakdown</h2>
+            </div>
+            <div className="budget-tiles">
               <div>
-                <div style={styles.timelineWrap}>
-                  {day.timeline?.map((item: any, idx: number) => (
-                    <div key={idx} style={styles.timelineRow}>
-                      <div style={styles.timelineLeft}>
-                        <div style={styles.timelineDot} />
-
-                        {idx !== day.timeline.length - 1 && (
-                          <div style={styles.timelineLine} />
-                        )}
-                      </div>
-
-                      <div
-                        style={{
-                          flex: 1,
-                        }}
-                      >
-                        <div style={styles.timelineTime}>{item.time}</div>
-
-                        <div style={styles.timelineActivity}>
-                          {item.activity}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-
-                {day.activities?.length > 0 && (
-                  <ul style={styles.activityList}>
-                    {day.activities.map((a: string, j: number) => (
-                      <li key={j} style={styles.activityItem}>
-                        {a}
-                      </li>
-                    ))}
-                  </ul>
-                )}
+                <span>Total</span>
+                <strong>{formatMoney(itinerary.totalEstimatedCost)}</strong>
               </div>
-
-              {/* RIGHT */}
-              <div style={styles.dayInfoPanel}>
-                <div style={styles.infoPanelRow}>🍽 {day.food}</div>
-
-                <div style={styles.infoPanelRow}>🏨 {day.stay}</div>
-
-                <div
-                  style={{
-                    ...styles.costBadge,
-                    marginTop: "auto",
-                  }}
-                >
-                  ₹{day.estimatedDayCost}
-                </div>
+              <div>
+                <span>Transport</span>
+                <strong>
+                  {formatMoney(itinerary.costBreakdown?.transport)}
+                </strong>
+              </div>
+              <div>
+                <span>Food</span>
+                <strong>{formatMoney(itinerary.costBreakdown?.food)}</strong>
+              </div>
+              <div>
+                <span>Activities</span>
+                <strong>
+                  {formatMoney(itinerary.costBreakdown?.activities)}
+                </strong>
               </div>
             </div>
           </section>
-        ))}
 
-        {/* ======================================================
-            BOTTOM GRID
-        ====================================================== */}
+          <section className="result-card compact-card">
+            <div className="section-title-row">
+              <span className="soft-icon red">
+                <Train size={20} />
+              </span>
+              <h2>Travel Options</h2>
+            </div>
+            {travelOptions.slice(0, 3).map((travel, index) => (
+              <div
+                className="option-preview"
+                key={`${travel.name}-${travel.number}-${index}`}
+              >
+                <div>
+                  <strong>{travel.name}</strong>
+                  <span>
+                    {travel.from} to {travel.to}
+                  </span>
+                </div>
+                <b>{formatMoney(travel.cost)}</b>
+              </div>
+            ))}
+            <Link className="text-link" href="/result/travel">
+              View All Options <ArrowRight size={16} />
+            </Link>
+          </section>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: "24px",
-          }}
-        >
-          {/* STAY */}
-          <section style={styles.sectionCard}>
-            <div style={styles.sectionHeader}>🏨 Stay Options</div>
+          {local ? (
+            <section className="result-card compact-card">
+              <div className="section-title-row">
+                <span className="soft-icon green">
+                  <CarFront size={20} />
+                </span>
+                <h2>Local Transport</h2>
+              </div>
+              <p className="muted-copy">{local.details}</p>
+              <strong className="green-price">
+                {formatMoney(local.dailyCost)} / day
+              </strong>
+            </section>
+          ) : null}
 
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "18px",
-              }}
-            >
-              {itinerary.stayOptions?.map((s: any, i: number) => {
-                const expanded = expandedStay.includes(i);
-
-                return (
-                  <div key={i} style={styles.optionCard}>
-                    <div style={styles.optionTop}>
-                      <div>
-                        <div style={styles.optionTitle}>{s.name}</div>
-
-                        <div style={styles.optionSub}>📍 {s.location}</div>
-                      </div>
-
-                      <div style={styles.optionPrice}>
-                        ₹{s.pricePerNight}
-                        /night
-                      </div>
-                    </div>
-
-                    <div style={styles.optionMeta}>
-                      ⭐ {s.rating}
-                      <span>👥 {s.occupancy}</span>
-                    </div>
-
-                    <button
-                      style={styles.detailsBtn}
-                      onClick={() => toggleStay(i)}
-                    >
-                      {expanded ? "Hide Details" : "View Details"}
-                    </button>
-
-                    {expanded && (
-                      <div style={styles.expandedBox}>
-                        <div>
-                          <b>Room:</b> {s.roomCategory}
-                        </div>
-
-                        <div>
-                          <b>Rooms:</b> {s.roomsRequired}
-                        </div>
-
-                        <div>
-                          <b>Recommended:</b> {s.recommendedFor}
-                        </div>
-
-                        {s.amenities?.length > 0 && (
-                          <div style={styles.amenityWrap}>
-                            {s.amenities.map((a: string, j: number) => (
-                              <div key={j} style={styles.amenityTag}>
-                                {a}
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
+          {stays.length ? (
+            <section className="result-card compact-card">
+              <div className="section-title-row">
+                <span className="soft-icon blue">
+                  <BedDouble size={20} />
+                </span>
+                <h2>Stay Options</h2>
+              </div>
+              {stays.slice(0, 2).map((stay) => (
+                <div className="option-preview" key={stay.name}>
+                  <div>
+                    <strong>{stay.name}</strong>
+                    <span>{stay.location}</span>
                   </div>
-                );
-              })}
-            </div>
-          </section>
-          {/* ======================================================
-              TRAVEL OPTIONS
-          ====================================================== */}
-
-          <section style={styles.sectionCard}>
-            <div style={styles.sectionHeader}>🚆 Travel Options</div>
-
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "column",
-                gap: "18px",
-              }}
-            >
-              {itinerary.travelOptions?.toDestination?.map(
-                (t: any, i: number) => {
-                  const expanded = expandedTravel.includes(i);
-
-                  const meta = getTransportMeta(t.mode);
-
-                  return (
-                    <div key={i} style={styles.optionCard}>
-                      <div style={styles.optionTop}>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "14px",
-                            alignItems: "center",
-                          }}
-                        >
-                          <div
-                            style={{
-                              ...styles.transportType,
-                              background: meta.bg,
-                            }}
-                          >
-                            {meta.icon}
-                          </div>
-
-                          <div>
-                            <div style={styles.optionTitle}>{t.name}</div>
-
-                            <div style={styles.optionSub}>{t.provider}</div>
-                          </div>
-                        </div>
-
-                        <div style={styles.optionPrice}>₹{t.cost}</div>
-                      </div>
-
-                      <div style={styles.optionMeta}>
-                        🕒 {t.departureTime} → {t.arrivalTime}
-                        <span>⏱ {t.duration}</span>
-                      </div>
-
-                      <button
-                        style={styles.detailsBtn}
-                        onClick={() => toggleTravel(i)}
-                      >
-                        {expanded ? "Hide Details" : "View Details"}
-                      </button>
-
-                      {expanded && (
-                        <div style={styles.expandedBox}>
-                          <div>
-                            <b>Route:</b> {t.from} → {t.to}
-                          </div>
-
-                          <div>
-                            <b>Class:</b> {t.class}
-                          </div>
-
-                          <div>
-                            <b>Frequency:</b> {t.frequency}
-                          </div>
-
-                          <div>
-                            <b>Notes:</b> {t.notes}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  );
-                },
-              )}
-            </div>
-          </section>
-        </div>
-
-        {/* ======================================================
-            LOCAL TRANSPORT + STAY
-        ====================================================== */}
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr",
-            gap: "24px",
-            marginTop: "24px",
-          }}
-        >
-          {/* ======================================================
-              BUDGET
-          ====================================================== */}
-
-          <section style={styles.sectionCard}>
-            <div style={styles.sectionHeader}>💰 Budget Breakdown</div>
-
-            <div
-              style={{
-                ...styles.budgetGrid,
-                gridTemplateColumns: isMobile ? "1fr 1fr" : "repeat(2,1fr)",
-              }}
-            >
-              {[
-                {
-                  label: "Total",
-                  value: itinerary.totalEstimatedCost,
-                  icon: "💵",
-                },
-                {
-                  label: "Transport",
-                  value: itinerary.costBreakdown?.transport,
-                  icon: "🚆",
-                },
-                {
-                  label: "Stay",
-                  value: itinerary.costBreakdown?.stay,
-                  icon: "🏨",
-                },
-                {
-                  label: "Food",
-                  value: itinerary.costBreakdown?.food,
-                  icon: "🍽",
-                },
-                {
-                  label: "Activities",
-                  value: itinerary.costBreakdown?.activities,
-                  icon: "🎟",
-                },
-              ].map((b, i) => (
-                <div key={i} style={styles.budgetCard}>
-                  <div style={styles.budgetIcon}>{b.icon}</div>
-
-                  <div style={styles.budgetLabel}>{b.label}</div>
-
-                  <div style={styles.budgetValue}>₹{b.value}</div>
+                  <b>{formatMoney(stay.pricePerNight)}/night</b>
                 </div>
               ))}
-            </div>
-          </section>
-          {/* LOCAL */}
-          {itinerary.travelOptions?.localTransport?.length > 0 && (
-            <section style={styles.sectionCard}>
-              <div style={styles.sectionHeader}>🚕 Local Transport</div>
-
-              {itinerary.travelOptions.localTransport.map(
-                (l: any, i: number) => (
-                  <div key={i} style={styles.localTransportCard}>
-                    <div style={styles.localTransportTitle}>{l.mode}</div>
-
-                    <div style={styles.localTransportText}>{l.details}</div>
-
-                    <div style={styles.localTransportPrice}>
-                      ₹{l.dailyCost} / day
-                    </div>
-                  </div>
-                ),
-              )}
+              <Link className="text-link" href="/result/stays">
+                View All Stays <ArrowRight size={16} />
+              </Link>
             </section>
-          )}
-        </div>
-
-        {/* ======================================================
-            ACTION BUTTONS
-        ====================================================== */}
-
-        <div
-          style={{
-            ...styles.actionWrap,
-            flexDirection: isMobile ? "column" : "row",
-          }}
-        >
-          <button
-            style={{
-              ...styles.actionBtn,
-              background: "linear-gradient(135deg,#16a34a,#22c55e)",
-            }}
-            onClick={shareOnWhatsApp}
-          >
-            📲 Share on WhatsApp
-          </button>
-
-          <button
-            style={{
-              ...styles.actionBtn,
-              background: "linear-gradient(135deg,#2563eb,#3b82f6)",
-            }}
-            onClick={() => (window.location.href = "/")}
-          >
-            🔄 Plan Another Trip
-          </button>
+          ) : null}
         </div>
       </div>
-    </div>
+    </ResultFrame>
   );
 }
-
-// ======================================================
-// PAGE
-// ======================================================
-export default function Result() {
-  return (
-    <Suspense
-      fallback={
-        <div
-          style={{
-            padding: "40px",
-            textAlign: "center",
-          }}
-        >
-          Loading...
-        </div>
-      }
-    >
-      <ItineraryContent />
-    </Suspense>
-  );
-}
-
-// ======================================================
-// STYLES
-// ======================================================
-const styles: any = {
-  page: {
-    width: "100%",
-    minHeight: "100vh",
-    background: "linear-gradient(to bottom,#edf4ff,#f8fbff)",
-    padding: "20px",
-    boxSizing: "border-box",
-    overflowX: "hidden",
-  },
-
-  container: {
-    width: "100%",
-    maxWidth: "1450px",
-    margin: "0 auto",
-    fontFamily: "Inter, Segoe UI, sans-serif",
-    boxSizing: "border-box",
-  },
-
-  // HERO
-  hero: {
-    width: "100%",
-    background: "linear-gradient(135deg,#ffffff,#e8f2ff)",
-    borderRadius: "32px",
-    overflow: "hidden",
-    display: "flex",
-    boxShadow: "0 18px 45px rgba(15,23,42,0.08)",
-    marginBottom: "26px",
-  },
-
-  heroLeft: {
-    padding: "40px",
-    display: "flex",
-    flexDirection: "column",
-    justifyContent: "center",
-  },
-
-  heroRight: {
-    width: "50%",
-    position: "relative",
-  },
-
-  heroImage: {
-    width: "100%",
-    height: "100%",
-    objectFit: "cover",
-  },
-
-  brand: {
-    fontSize: "20px",
-    fontWeight: "800",
-    color: "#2563eb",
-    marginBottom: "24px",
-  },
-
-  heroSubtitle: {
-    fontSize: "24px",
-    fontWeight: "700",
-    color: "#1e293b",
-  },
-
-  heroTitle: {
-    margin: "10px 0 20px",
-    lineHeight: 1,
-    fontWeight: "900",
-    color: "#0f172a",
-  },
-
-  heroText: {
-    maxWidth: "560px",
-    fontSize: "18px",
-    lineHeight: 1.8,
-    color: "#475569",
-    marginBottom: "28px",
-  },
-
-  heroFeatures: {
-    display: "grid",
-    gap: "16px",
-  },
-
-  featureCard: {
-    background: "#ffffffcc",
-    border: "1px solid #dbeafe",
-    padding: "18px",
-    borderRadius: "18px",
-    backdropFilter: "blur(10px)",
-  },
-
-  featureIcon: {
-    fontSize: "24px",
-    marginBottom: "10px",
-  },
-
-  featureText: {
-    fontWeight: "700",
-    color: "#1e293b",
-  },
-
-  // SECTIONS
-  sectionCard: {
-    background: "#ffffff",
-    borderRadius: "28px",
-    padding: "28px",
-    marginBottom: "24px",
-    boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
-  },
-
-  sectionHeader: {
-    fontSize: "32px",
-    fontWeight: "800",
-    color: "#0f172a",
-    marginBottom: "22px",
-  },
-
-  // SUMMARY
-  summaryText: {
-    color: "#475569",
-    lineHeight: 1.8,
-    fontSize: "17px",
-    marginBottom: "24px",
-  },
-
-  summaryGrid: {
-    display: "grid",
-    gap: "18px",
-  },
-
-  summaryBox: {
-    background: "#f8fbff",
-    border: "1px solid #dbeafe",
-    borderRadius: "18px",
-    padding: "20px",
-  },
-
-  summaryLabel: {
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#64748b",
-    marginBottom: "10px",
-    textTransform: "uppercase",
-  },
-
-  summaryValue: {
-    fontSize: "20px",
-    fontWeight: "800",
-    color: "#0f172a",
-  },
-
-  // STATS
-  statsGrid: {
-    display: "grid",
-    gap: "18px",
-  },
-
-  statCard: {
-    background: "linear-gradient(135deg,#ffffff,#f8fbff)",
-    border: "1px solid #dbeafe",
-    borderRadius: "22px",
-    padding: "24px",
-    display: "flex",
-    alignItems: "center",
-    gap: "18px",
-  },
-
-  statIcon: {
-    width: "62px",
-    height: "62px",
-    borderRadius: "18px",
-    background: "linear-gradient(135deg,#2563eb,#60a5fa)",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#fff",
-    fontSize: "28px",
-  },
-
-  statLabel: {
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#64748b",
-    marginBottom: "6px",
-    textTransform: "uppercase",
-  },
-
-  statValue: {
-    fontSize: "28px",
-    fontWeight: "900",
-    color: "#0f172a",
-  },
-
-  // DAYS
-  dayCard: {
-    background: "#ffffff",
-    borderRadius: "28px",
-    padding: "28px",
-    marginBottom: "24px",
-    boxShadow: "0 10px 30px rgba(15,23,42,0.06)",
-  },
-
-  dayHeader: {
-    fontSize: "34px",
-    fontWeight: "900",
-    marginBottom: "26px",
-    color: "#0f172a",
-  },
-
-  timelineWrap: {
-    position: "relative",
-  },
-
-  timelineRow: {
-    display: "flex",
-    gap: "16px",
-    marginBottom: "24px",
-  },
-
-  timelineLeft: {
-    width: "24px",
-    position: "relative",
-    display: "flex",
-    justifyContent: "center",
-  },
-
-  timelineDot: {
-    width: "14px",
-    height: "14px",
-    borderRadius: "50%",
-    background: "#2563eb",
-    marginTop: "8px",
-    zIndex: 2,
-  },
-
-  timelineLine: {
-    position: "absolute",
-    top: "24px",
-    width: "2px",
-    bottom: "-28px",
-    background: "#bfdbfe",
-  },
-
-  timelineTime: {
-    fontSize: "18px",
-    fontWeight: "800",
-    color: "#0f172a",
-    marginBottom: "6px",
-  },
-
-  timelineActivity: {
-    color: "#475569",
-    lineHeight: 1.7,
-  },
-
-  activityList: {
-    marginTop: "20px",
-    paddingLeft: "22px",
-  },
-
-  activityItem: {
-    marginBottom: "10px",
-    color: "#334155",
-    lineHeight: 1.8,
-  },
-
-  dayInfoPanel: {
-    background: "linear-gradient(135deg,#f8fbff,#eef5ff)",
-    borderRadius: "24px",
-    border: "1px solid #dbeafe",
-    padding: "24px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "16px",
-  },
-
-  infoPanelRow: {
-    background: "#ffffff",
-    borderRadius: "16px",
-    padding: "16px",
-    fontWeight: "700",
-    color: "#1e293b",
-    border: "1px solid #e2e8f0",
-  },
-
-  costBadge: {
-    background: "linear-gradient(135deg,#16a34a,#22c55e)",
-    color: "#fff",
-    borderRadius: "18px",
-    padding: "18px",
-    fontSize: "22px",
-    fontWeight: "900",
-    textAlign: "center",
-  },
-
-  // BUDGET
-  budgetGrid: {
-    display: "grid",
-    gap: "16px",
-  },
-
-  budgetCard: {
-    background: "#f8fbff",
-    borderRadius: "18px",
-    padding: "20px",
-    border: "1px solid #dbeafe",
-  },
-
-  budgetIcon: {
-    fontSize: "28px",
-    marginBottom: "10px",
-  },
-
-  budgetLabel: {
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#64748b",
-    marginBottom: "6px",
-    textTransform: "uppercase",
-  },
-
-  budgetValue: {
-    fontSize: "24px",
-    fontWeight: "900",
-    color: "#0f172a",
-  },
-
-  // OPTION
-  optionCard: {
-    borderRadius: "22px",
-    background: "linear-gradient(135deg,#ffffff,#f8fbff)",
-    border: "1px solid #dbeafe",
-    padding: "22px",
-  },
-
-  optionTop: {
-    display: "flex",
-    justifyContent: "space-between",
-    gap: "18px",
-    alignItems: "center",
-    marginBottom: "16px",
-    flexWrap: "wrap",
-  },
-
-  transportType: {
-    width: "52px",
-    height: "52px",
-    borderRadius: "16px",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    color: "#fff",
-    fontSize: "24px",
-  },
-
-  optionTitle: {
-    fontSize: "24px",
-    fontWeight: "900",
-    color: "#0f172a",
-  },
-
-  optionSub: {
-    color: "#64748b",
-    marginTop: "6px",
-  },
-
-  optionPrice: {
-    background: "linear-gradient(135deg,#16a34a,#22c55e)",
-    color: "#fff",
-    borderRadius: "16px",
-    padding: "14px 18px",
-    fontWeight: "800",
-    whiteSpace: "nowrap",
-  },
-
-  optionMeta: {
-    display: "flex",
-    gap: "18px",
-    flexWrap: "wrap",
-    color: "#475569",
-    fontWeight: "600",
-    marginBottom: "18px",
-  },
-
-  detailsBtn: {
-    border: "none",
-    background: "linear-gradient(135deg,#2563eb,#3b82f6)",
-    color: "#fff",
-    padding: "14px 18px",
-    borderRadius: "14px",
-    fontWeight: "700",
-    cursor: "pointer",
-  },
-
-  expandedBox: {
-    marginTop: "20px",
-    borderTop: "1px solid #dbeafe",
-    paddingTop: "18px",
-    display: "flex",
-    flexDirection: "column",
-    gap: "10px",
-    color: "#334155",
-    lineHeight: 1.7,
-  },
-
-  // AMENITIES
-  amenityWrap: {
-    display: "flex",
-    gap: "10px",
-    flexWrap: "wrap",
-    marginTop: "12px",
-  },
-
-  amenityTag: {
-    background: "#eef4ff",
-    border: "1px solid #bfdbfe",
-    padding: "10px 14px",
-    borderRadius: "999px",
-    fontSize: "13px",
-    fontWeight: "700",
-    color: "#1e40af",
-  },
-
-  // LOCAL
-  localTransportCard: {
-    background: "linear-gradient(135deg,#ffffff,#f8fbff)",
-    border: "1px solid #dbeafe",
-    borderRadius: "22px",
-    padding: "24px",
-  },
-
-  localTransportTitle: {
-    fontSize: "24px",
-    fontWeight: "900",
-    marginBottom: "12px",
-    color: "#0f172a",
-  },
-
-  localTransportText: {
-    color: "#475569",
-    lineHeight: 1.8,
-    marginBottom: "20px",
-  },
-
-  localTransportPrice: {
-    display: "inline-block",
-    background: "linear-gradient(135deg,#16a34a,#22c55e)",
-    color: "#fff",
-    padding: "14px 18px",
-    borderRadius: "14px",
-    fontWeight: "800",
-  },
-
-  // ACTION
-  actionWrap: {
-    display: "flex",
-    gap: "18px",
-    marginTop: "30px",
-    marginBottom: "40px",
-  },
-
-  actionBtn: {
-    flex: 1,
-    border: "none",
-    padding: "18px 24px",
-    borderRadius: "18px",
-    color: "#fff",
-    fontSize: "17px",
-    fontWeight: "800",
-    cursor: "pointer",
-    boxShadow: "0 10px 25px rgba(37,99,235,0.18)",
-  },
-};

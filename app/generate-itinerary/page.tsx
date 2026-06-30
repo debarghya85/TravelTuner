@@ -167,6 +167,10 @@ export default function GenerateItineraryPage() {
       });
 
       if (!response.ok) {
+        if (response.status === 401) {
+          router.push("/login");
+          return;
+        }
         throw new Error("Failed to generate itinerary");
       }
 

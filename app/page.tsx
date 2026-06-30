@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useRef, useState } from "react";
 import {
   ArrowRight,
   BadgeCheck,
@@ -19,7 +22,13 @@ import {
   TicketCheck,
   WalletCards,
   XCircle,
+  LogOut,
+  Bell,
+  UserRound,
+  Smartphone,
 } from "lucide-react";
+
+type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
 
 const benefits = [
   {
@@ -100,26 +109,14 @@ const pricingFeatures = [
     name: "Restaurant and Food Recommendations",
     availability: [true, true],
   },
-  {
-    icon: Plane,
-    name: "Local Transport Details",
-    availability: [true, true],
-  },
+  { icon: Plane, name: "Local Transport Details", availability: [true, true] },
   {
     icon: CircleDollarSign,
     name: "Budget Estimate",
     availability: [true, true],
   },
-  {
-    icon: Share2,
-    name: "Share Itinerary",
-    availability: [false, true],
-  },
-  {
-    icon: Download,
-    name: "Download as PDF",
-    availability: [false, true],
-  },
+  { icon: Share2, name: "Share Itinerary", availability: [false, true] },
+  { icon: Download, name: "Download as PDF", availability: [false, true] },
   {
     icon: Edit3,
     name: "Re-generate / Edit Itinerary",
@@ -128,6 +125,40 @@ const pricingFeatures = [
 ];
 
 export default function LandingPage() {
+  const [user, setUser] = useState<UserInfo>(null);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const res = await fetch("/api/auth/me");
+      if (res.ok) {
+        const data = await res.json();
+        setUser(data.user);
+      }
+    };
+
+    load();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!profileRef.current?.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    setUser(null);
+    setProfileOpen(false);
+    window.location.href = "/";
+  };
+
   return (
     <main className="landing-page">
       <header className="landing-header">
@@ -140,6 +171,81 @@ export default function LandingPage() {
         <nav className="landing-nav" aria-label="Main navigation">
           <a href="#how-it-works">How It Works</a>
           <a href="#pricing">Pricing</a>
+          {user ? (
+            <>
+              <Link href="/itineraries">My Itineraries</Link>
+              <div className="nav-profile-wrap" ref={profileRef}>
+                <button
+                  className="nav-profile-pill"
+                  type="button"
+                  onClick={() => setProfileOpen((current) => !current)}
+                  aria-expanded={profileOpen}
+                  aria-haspopup="menu"
+                >
+                  <span className="nav-avatar">
+                    <UserRound size={18} />
+                  </span>
+                  <span className="nav-profile-copy">
+                    <strong>
+                      {user.countryCode || "+91"} {user.mobile}
+                    </strong>
+                    <small>
+                      <span className="status-dot" />
+                      Logged in
+                    </small>
+                  </span>
+                </button>
+
+                {profileOpen ? (
+                  <div className="nav-profile-menu" role="menu">
+                    <div className="nav-profile-menu-head">
+                      <span>Signed in with</span>
+                      <strong>
+                        <Smartphone size={14} />
+                        {user.countryCode || "+91"} {user.mobile}
+                      </strong>
+                    </div>
+
+                    <Link
+                      href="/itineraries"
+                      className="nav-profile-menu-item"
+                      onClick={() => setProfileOpen(false)}
+                    >
+                      <CalendarDays size={18} />
+                      <div>
+                        <strong>My itineraries</strong>
+                        <span>View all your saved trips</span>
+                      </div>
+                    </Link>
+
+                    {/* <Link href="/" className="nav-profile-menu-item" onClick={() => setProfileOpen(false)}>
+                      <UserRound size={18} />
+                      <div>
+                        <strong>Account</strong>
+                        <span>Manage your preferences</span>
+                      </div>
+                    </Link> */}
+
+                    <button
+                      className="nav-profile-menu-item logout"
+                      type="button"
+                      onClick={handleLogout}
+                    >
+                      <LogOut size={18} />
+                      <div>
+                        <strong>Logout</strong>
+                        <span>Sign out from Travel Tuner</span>
+                      </div>
+                    </button>
+                  </div>
+                ) : null}
+              </div>
+            </>
+          ) : (
+            <Link href="/login" className="nav-login-pill">
+              Login
+            </Link>
+          )}
         </nav>
       </header>
 

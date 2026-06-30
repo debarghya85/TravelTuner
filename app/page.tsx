@@ -141,10 +141,6 @@ export default function LandingPage() {
           <a href="#how-it-works">How It Works</a>
           <a href="#pricing">Pricing</a>
         </nav>
-
-        <Link href="/login" className="login-button">
-          Login
-        </Link>
       </header>
 
       <section
@@ -262,9 +258,7 @@ export default function LandingPage() {
                 <th scope="col">Features</th>
                 {plans.map((plan) => (
                   <th scope="col" key={plan.name}>
-                    <span className="plan-name">
-                      {plan.name}
-                    </span>
+                    <span className="plan-name">{plan.name}</span>
                     <strong>
                       <span>Rs</span> {plan.price}
                     </strong>

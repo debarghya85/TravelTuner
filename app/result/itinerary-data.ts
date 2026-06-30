@@ -1,6 +1,7 @@
 "use client";
 
 export const ITINERARY_STORAGE_KEY = "travel-tuner:last-itinerary";
+const ITINERARY_LOCAL_STORAGE_KEY = "travel-tuner:last-itinerary:local";
 
 export type TimelineItem = {
   time?: string;
@@ -115,6 +116,7 @@ export function saveItinerary(payload: unknown) {
   }
 
   window.sessionStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(payload));
+  window.localStorage.setItem(ITINERARY_LOCAL_STORAGE_KEY, JSON.stringify(payload));
 }
 
 export function readItinerary(): Itinerary | null {
@@ -122,7 +124,9 @@ export function readItinerary(): Itinerary | null {
     return null;
   }
 
-  const raw = window.sessionStorage.getItem(ITINERARY_STORAGE_KEY);
+  const raw =
+    window.sessionStorage.getItem(ITINERARY_STORAGE_KEY) ||
+    window.localStorage.getItem(ITINERARY_LOCAL_STORAGE_KEY);
 
   if (!raw) {
     return null;

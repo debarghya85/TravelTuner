@@ -2,13 +2,25 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-const model = genAI.getGenerativeModel({
-  model: "gemini-3.1-flash-lite-preview",
-  generationConfig: {
-    maxOutputTokens: 32768,
-    responseMimeType: "application/json",
-  },
-});
+const MODEL_CANDIDATES = (
+  process.env.GEMINI_MODEL_FALLBACKS?.split(",") ?? [
+    "gemini-2.5-flash",
+    "gemini-3.5-flash",
+    "gemini-1.5-flash",
+  ]
+)
+  .map((model) => model.trim())
+  .filter(Boolean);
+
+function getModel(modelName: string) {
+  return genAI.getGenerativeModel({
+    model: modelName,
+    generationConfig: {
+      maxOutputTokens: 32768,
+      responseMimeType: "application/json",
+    },
+  });
+}
 
 function parseJsonResponse(text: string) {
   const start = text.indexOf("{");
@@ -30,17 +42,68 @@ function hasExpectedDays(payload: any, expectedDays?: number) {
 }
 
 async function generateJson(prompt: string) {
-  const result = await model.generateContent(prompt);
-  const text = result.response.text();
+  let lastError: unknown;
 
-  console.log("RAW AI:", text);
+  for (const modelName of MODEL_CANDIDATES) {
+    try {
+      const model = getModel(modelName);
+      const result = await model.generateContent(prompt);
+      const text = result.response.text();
 
-  return parseJsonResponse(text);
+      console.log(`RAW AI (${modelName}):`, text);
+
+      return parseJsonResponse(text);
+    } catch (error: any) {
+      lastError = error;
+      const status = error?.status;
+      const retryable = status === 429 || status === 503 || status === 504;
+
+      if (!retryable) {
+        throw error;
+      }
+
+      console.warn(
+        `AI model ${modelName} failed with ${status ?? "unknown"}. Trying next fallback model.`,
+      );
+    }
+  }
+
+  throw lastError;
+}
+
+async function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function generateJsonWithRetry(prompt: string, attempts = 3) {
+  let lastError: unknown;
+
+  for (let attempt = 1; attempt <= attempts; attempt += 1) {
+    try {
+      return await generateJson(prompt);
+    } catch (error: any) {
+      lastError = error;
+      const status = error?.status;
+      const retryable = status === 429 || status === 503 || status === 504;
+
+      if (!retryable || attempt === attempts) {
+        throw error;
+      }
+
+      const delay = 500 * attempt * attempt;
+      console.warn(
+        `AI request failed with ${status ?? "unknown"} on attempt ${attempt}. Retrying in ${delay}ms.`,
+      );
+      await sleep(delay);
+    }
+  }
+
+  throw lastError;
 }
 
 export async function callAI(prompt: string, expectedDays?: number) {
   try {
-    const firstResponse = await generateJson(prompt);
+    const firstResponse = await generateJsonWithRetry(prompt);
 
     if (hasExpectedDays(firstResponse, expectedDays)) {
       return firstResponse;
@@ -66,7 +129,7 @@ Original instructions:
 ${prompt}
 `;
 
-    const secondResponse = await generateJson(repairPrompt);
+    const secondResponse = await generateJsonWithRetry(repairPrompt);
 
     if (!hasExpectedDays(secondResponse, expectedDays)) {
       console.warn(

@@ -83,6 +83,16 @@ export function ResultFrame({
     );
   };
 
+  const downloadPdf = () => {
+    const itinerary = readItinerary();
+
+    if (!itinerary) {
+      return;
+    }
+
+    window.open("/result/print", "_blank", "noopener,noreferrer");
+  };
+
   return (
     <main className="result-app">
       <aside className="result-sidebar">
@@ -118,6 +128,9 @@ export function ResultFrame({
             onClick={shareOnWhatsApp}
           >
             Share on WhatsApp
+          </button>
+          <button className="pdf-action" type="button" onClick={downloadPdf}>
+            Download as PDF
           </button>
           <Link href="/generate-itinerary" className="primary-action">
             Plan Another Trip
@@ -155,6 +168,19 @@ export function ResultFrame({
             </button> */}
           </header>
         )}
+
+        <div className="result-mobile-actions">
+          <button
+            className="whatsapp-action"
+            type="button"
+            onClick={shareOnWhatsApp}
+          >
+            Share on WhatsApp
+          </button>
+          <button className="pdf-action" type="button" onClick={downloadPdf}>
+            Download as PDF
+          </button>
+        </div>
 
         <div className={aside ? "result-content-with-aside" : "result-content"}>
           <div>{children}</div>

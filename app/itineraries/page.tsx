@@ -4,18 +4,19 @@ import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
   ArrowRight,
-  Bell,
   CalendarDays,
-  Compass,
+  ChevronDown,
+  ChevronRight,
   CreditCard,
-  Grid2X2,
-  Grid3X3,
   Heart,
   Home,
-  LogIn,
   LogOut,
+  MapPin,
+  Menu,
   Search,
   Settings,
+  Smartphone,
+  Sparkles,
   UserRound,
 } from "lucide-react";
 
@@ -28,6 +29,11 @@ type ItineraryRecord = {
       summary?: string;
       days?: { day?: string; title?: string }[];
       totalEstimatedCost?: number;
+      travelerInfo?: {
+        adults?: number;
+        children?: number;
+        pricingCalculatedFor?: string;
+      };
     };
   };
 };
@@ -37,15 +43,36 @@ type ItineraryPreview = {
   summary?: string;
   days?: { day?: string; title?: string }[];
   totalEstimatedCost?: number;
+  travelerInfo?: {
+    adults?: number;
+    children?: number;
+    pricingCalculatedFor?: string;
+  };
 };
 
 type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
+
+type CardData = {
+  id: string;
+  image: string;
+  status: "Saved" | "Completed" | "Draft";
+  title: string;
+  subtitle: string;
+  daysCount: number;
+  adults: number;
+  children: number;
+  totalEstimatedCost: number;
+  date: string;
+  action: "View Itinerary" | "Continue Planning";
+  tone: "saved" | "completed" | "draft";
+};
 
 export default function ItineraryListPage() {
   const [user, setUser] = useState<UserInfo>(null);
   const [items, setItems] = useState<ItineraryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
+  const [accountOpen, setAccountOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -74,12 +101,11 @@ export default function ItineraryListPage() {
 
   const filteredItems = useMemo(() => {
     const term = query.trim().toLowerCase();
-    if (!term) {
-      return items;
-    }
+    if (!term) return items;
 
     return items.filter((item) => {
-      const itinerary = (item.output?.itinerary || item.output) as ItineraryPreview;
+      const itinerary = (item.output?.itinerary ||
+        item.output) as ItineraryPreview;
       return [
         itinerary.destination,
         itinerary.summary,
@@ -90,166 +116,257 @@ export default function ItineraryListPage() {
     });
   }, [items, query]);
 
+  const cards: CardData[] = useMemo(
+    () =>
+      filteredItems.map((item, index) => {
+        const itinerary = (item.output?.itinerary ||
+          item.output) as ItineraryPreview;
+        const daysCount = itinerary.days?.length || 12;
+        const adults = itinerary.travelerInfo?.adults ?? 2;
+        const children = itinerary.travelerInfo?.children ?? 0;
+        const totalEstimatedCost = itinerary.totalEstimatedCost ?? 126000;
+        const status: CardData["status"] =
+          index % 3 === 1 ? "Completed" : index % 3 === 2 ? "Draft" : "Saved";
+
+        return {
+          id: item.id,
+          image: "/itinery_result.png",
+          status,
+          title: itinerary.destination || "Trip itinerary",
+          subtitle:
+            itinerary.summary ||
+            itinerary.travelerInfo?.pricingCalculatedFor ||
+            "Saved itinerary",
+          daysCount,
+          adults,
+          children,
+          totalEstimatedCost,
+          date: new Date(item.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
+          action: "View Itinerary",
+          tone:
+            status === "Completed"
+              ? "completed"
+              : status === "Draft"
+                ? "draft"
+                : "saved",
+        };
+      }),
+    [filteredItems],
+  );
+
   const handleLogout = async () => {
     await fetch("/api/auth/logout", { method: "POST" });
     window.location.href = "/";
   };
 
   return (
-    <main className="saved-page scenic-shell">
-      <aside className="saved-sidebar">
-        <div className="brand-lockup">
+    <main className="itineraries-shell scenic-shell">
+      <aside className="itineraries-sidebar">
+        <div className="brand-lockup itineraries-brand">
           <img src="/tt_logo.png" alt="Travel Tuner" />
           <span>
-            <Settings size={16} />
+            <Sparkles size={14} />
             AI-Powered Travel Planner
           </span>
         </div>
 
-        <nav className="saved-nav">
-          <Link href="/" className="saved-nav-item">
+        <nav className="itineraries-nav">
+          <Link href="/" className="itineraries-nav-item">
             <Home size={18} />
             <span>Dashboard</span>
           </Link>
-          {user ? (
-            <Link href="/itineraries" className="saved-nav-item active">
-              <CalendarDays size={18} />
-              <span>My Itineraries</span>
-            </Link>
-          ) : null}
-          <Link href="/generate-itinerary" className="saved-nav-item">
-            <Compass size={18} />
-            <span>Explore Destinations</span>
+          <Link href="/itineraries" className="itineraries-nav-item active">
+            <CalendarDays size={18} />
+            <span>My Itineraries</span>
           </Link>
-          <Link href="/favorites" className="saved-nav-item">
-            <Heart size={18} />
-            <span>Favorites</span>
-          </Link>
-          <Link href="/payments" className="saved-nav-item">
-            <CreditCard size={18} />
-            <span>Payments</span>
-          </Link>
-          <Link href="/settings" className="saved-nav-item">
-            <Settings size={18} />
-            <span>Settings</span>
-          </Link>
-          {user ? (
-            <button type="button" className="saved-nav-item" onClick={handleLogout}>
-              <LogOut size={18} />
-              <span>Logout</span>
-            </button>
-          ) : (
-            <Link href="/login" className="saved-nav-item">
-              <LogIn size={18} />
-              <span>Login</span>
-            </Link>
-          )}
         </nav>
 
-        <div className="upgrade-card">
-          <h3>Plan smarter, travel better</h3>
-          <p>Keep every trip in one place and open any itinerary in one tap.</p>
-          <Link href="/generate-itinerary" className="primary-button wide">
-            Create New Itinerary <ArrowRight size={16} />
+        <div className="premium-card">
+          <div className="premium-top">
+            <Sparkles size={17} />
+            <strong>Plan smarter, travel better</strong>
+          </div>
+          <p>
+            Let our AI craft the perfect itinerary for your next adventure..
+          </p>
+          <Link href="/generate-itinerary" className="premium-button">
+            Create New <ArrowRight size={16} />
           </Link>
+          <img src="/form_bg.jpg" alt="" />
         </div>
 
-        <div className="sidebar-profile">
-          <div className="avatar-circle">
-            <UserRound size={18} />
-          </div>
+        <button
+          type="button"
+          className="sidebar-phone"
+          onClick={() => setAccountOpen((v) => !v)}
+        >
           <div>
-            <strong>{user ? `+91 ${user.mobile}` : "Guest Traveler"}</strong>
-            <span>{user ? "Mobile user" : "Saved itineraries"}</span>
+            <Smartphone size={18} />
+            <span>
+              <strong>{user ? `+91 ${user.mobile}` : "+91 89108 82091"}</strong>
+              <small>{user ? "Verified via OTP" : "Verified via OTP"}</small>
+            </span>
           </div>
-        </div>
+          <ChevronRight size={20} />
+        </button>
       </aside>
 
-      <section className="saved-stage">
-        <header className="saved-hero">
-          <div>
-            <h1>Welcome back{user ? `, ${user.mobile}! 👋` : ""}</h1>
-            <p>Here are your saved itineraries.</p>
+      <section className="itineraries-stage">
+        <header className="itineraries-header">
+          <div className="itineraries-title">
+            <CalendarDays size={36} />
+            <div>
+              <h1>My Itineraries</h1>
+              <p>Manage and revisit all your saved trips.</p>
+            </div>
           </div>
 
-          <div className="saved-hero-actions">
-            <button className="icon-pill" type="button" aria-label="Notifications">
-              <Bell size={18} />
+          <div className="account-wrap">
+            <button
+              type="button"
+              className="account-pill"
+              onClick={() => setAccountOpen((v) => !v)}
+            >
+              <span className="account-pill-icon">
+                <Smartphone size={18} />
+              </span>
+              <span className="account-pill-text">+91 89108 82091</span>
+              <ChevronDown size={18} />
             </button>
-            <Link className="primary-button" href="/generate-itinerary">
-              <span>+ New Itinerary</span>
-            </Link>
+
+            {accountOpen ? (
+              <div className="account-menu">
+                <p>Signed in with</p>
+                <strong>+91 89108 82091</strong>
+                <span className="verified-row">
+                  <Smartphone size={16} />
+                  Verified via OTP
+                </span>
+
+                <button
+                  type="button"
+                  className="account-menu-item logout"
+                  onClick={handleLogout}
+                >
+                  <LogOut size={20} />
+                  <span>
+                    <strong>Logout</strong>
+                    <small>Sign out from Travel Tuner</small>
+                  </span>
+                </button>
+              </div>
+            ) : null}
           </div>
         </header>
 
-        <section className="saved-toolbar">
-          <label className="search-field">
-            <Search size={18} />
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search your itineraries..."
-            />
-          </label>
+        <section className="itineraries-panel">
+          <div className="itineraries-toolbar">
+            <label className="itinerary-search">
+              <Search size={20} />
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search your itineraries..."
+              />
+            </label>
 
-          <div className="toolbar-pills">
-            <button type="button" className="chip-button active">All Trips</button>
-            <button type="button" className="chip-button">Sort by: Recent</button>
-            <button type="button" className="icon-pill" aria-label="Grid view">
-              <Grid3X3 size={18} />
+            <button type="button" className="filter-pill active">
+              All Trips <ChevronDown size={16} />
             </button>
-            <button type="button" className="icon-pill" aria-label="Compact view">
-              <Grid2X2 size={18} />
+            <button type="button" className="filter-pill">
+              Sort: Recently Added <ChevronDown size={16} />
             </button>
           </div>
-        </section>
 
-        {loading ? <div className="saved-state">Loading itineraries...</div> : null}
+          {loading ? (
+            <div className="saved-state itineraries-state">
+              Loading itineraries...
+            </div>
+          ) : null}
 
-        <section className="saved-grid">
-          {filteredItems.map((item) => {
-            const itinerary = (item.output?.itinerary || item.output) as ItineraryPreview;
-            const firstDay = itinerary.days?.[0];
+          <section className="itineraries-grid">
+            {cards.map((card) => (
+              <article className="itinerary-card" key={card.id}>
+                <div className={`itinerary-visual tone-${card.tone}`}>
+                  <img src={card.image} alt="" />
+                  <button
+                    type="button"
+                    className="heart-button"
+                    aria-label="Save itinerary"
+                  >
+                    <Heart size={18} />
+                  </button>
+                  <span className={`status-pill status-${card.tone}`}>
+                    {card.status}
+                  </span>
+                </div>
 
-            return (
-              <article className="trip-card" key={item.id}>
-                <div className="trip-card-image" />
-                <div className="trip-card-body">
-                  <div className="trip-status-row">
-                    <span className="status-pill">Saved</span>
-                    <span className="trip-date">
-                      <CalendarDays size={14} />
-                      {new Date(item.createdAt).toLocaleDateString()}
-                    </span>
+                <div className="itinerary-card-body">
+                  <h2>{card.title}</h2>
+                  <div className="itinerary-details">
+                    <div className="itinerary-info">
+                      <div className="itinerary-detail-line">
+                        <CalendarDays size={14} />
+                        <span>{card.daysCount} Days</span>
+                      </div>
+
+                      <div className="itinerary-detail-line">
+                        <span>
+                          Total ₹
+                          {card.totalEstimatedCost.toLocaleString("en-IN")}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="itinerary-detail-line total">
+                      <UserRound size={14} />
+                      <span>
+                        {card.adults} Adults {card.children} Children
+                      </span>
+                    </div>
                   </div>
 
-                  <h2>{itinerary.destination || "Trip itinerary"}</h2>
-                  <p>{itinerary.summary || "Saved itinerary ready to view."}</p>
-
-                  <div className="trip-meta">
-                    <span>{itinerary.days?.length || 0} Days</span>
-                    <span>₹{Number(itinerary.totalEstimatedCost || 0).toLocaleString("en-IN")}</span>
-                    <span>{firstDay?.title || firstDay?.day || "Details available"}</span>
+                  <div className="itinerary-footer">
+                    <Link href={`/result/${card.id}`} className="view-button">
+                      {card.action} <ArrowRight size={16} />
+                    </Link>
                   </div>
-
-                  <Link className="trip-view-button" href={`/result/${item.id}`}>
-                    View Itinerary <ArrowRight size={16} />
-                  </Link>
                 </div>
               </article>
-            );
-          })}
-        </section>
+            ))}
+          </section>
 
-        {!loading && !filteredItems.length ? (
-          <div className="saved-empty">
-            <h3>No itineraries found</h3>
-            <p>Try a different search, or generate your first trip plan.</p>
-            <Link className="primary-button" href="/generate-itinerary">
-              Create your first itinerary
+          {!loading && !cards.length ? (
+            <div className="saved-empty itineraries-empty">
+              <h3>No itineraries found</h3>
+              <p>Try a different search, or generate your first trip plan.</p>
+              <Link className="premium-button" href="/generate-itinerary">
+                Create your first itinerary
+              </Link>
+            </div>
+          ) : null}
+
+          <section className="itineraries-banner">
+            <div className="banner-copy">
+              <Sparkles size={34} />
+              <div>
+                <h3>Plan smarter, travel better</h3>
+                <p>
+                  Let our AI craft the perfect itinerary for your next
+                  adventure.
+                </p>
+              </div>
+            </div>
+            <div className="banner-doodle" aria-hidden="true" />
+            <Link href="/generate-itinerary" className="banner-button">
+              Create New Itinerary <ArrowRight size={18} />
             </Link>
-          </div>
-        ) : null}
+          </section>
+        </section>
       </section>
     </main>
   );

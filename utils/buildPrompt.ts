@@ -174,7 +174,16 @@ PLANNING RULES (VERY IMPORTANT)
    - dayTransport should describe sightseeing/intercity/local transfers for that day, for example:
      "Dedicated luxury SUV (Innova/Xylo) for sightseeing and intercity transfers"
    - Also include the same day-specific local transfer/sightseeing data inside each matching days[n].localTransport array
-
+10. DESTINATION COVER RULE:
+   - Generate one "coverImagePrompt" suitable for AI image generation.
+   - The prompt should create a stunning, cinematic, premium travel poster style image.
+   - It MUST represent the destination using its most iconic landmarks, landscapes, culture and atmosphere.
+   - The image should have a strong WOW factor suitable as a hero/banner image.
+   - Do NOT include people unless they are essential to the destination experience.
+   - Do NOT generate image URLs.
+   - Only return a descriptive prompt.
+   - Also generate a very short "tagline" (maximum 40 characters) describing the trip.
+   - The tagline should be catchy and suitable for displaying on a travel card.
 ====================
 OUTPUT RULES
 ====================
@@ -197,7 +206,10 @@ Ensure:
 - "travelOptions.dayTransport" MUST contain day-wise local transport and should not repeat arrival train/flight data
 - Day 1 localTransport MUST show pickup/transfer to hotel along with any local sightseeing transfer
 - Last day localTransport MUST show hotel-to-station/airport transfer along with any local movement
-
+- "coverImagePrompt" MUST be present
+- "tagline" MUST be present
+- tagline length MUST NOT exceed 40 characters
+- coverImagePrompt should be detailed enough for an AI image generator
 ====================
 OUTPUT FORMAT
 ====================
@@ -208,7 +220,8 @@ Day 1, Day 2, Day 3 ... Day ${Number(data.days) || data.days}.
 
 {
   "summary": "string",
-
+  "tagline": "40 characters max",
+  "coverImagePrompt": "A breathtaking cinematic travel poster of DESTINATION featuring iconic landmarks, beautiful lighting, ultra realistic, vibrant colors, aerial perspective, premium tourism photography, 8k quality, no text, no watermark.",
   "destination": "${data.destination}",
 
   "bestTimeToVisit": "string",
@@ -469,7 +482,10 @@ FINAL VALIDATION CHECK (SELF VERIFY BEFORE OUTPUT)
 - Are room counts realistic?
 - Are valid Google Maps links present?
 - Are multiple realistic train/flight options included?
-
+- Is "coverImagePrompt" present?
+- Is "coverImagePrompt" suitable for generating a premium hero image?
+- Is "tagline" present?
+- Is the tagline 40 characters or fewer?
 Return ONLY the JSON.
 `;
 }

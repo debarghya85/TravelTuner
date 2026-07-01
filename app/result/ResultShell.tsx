@@ -55,26 +55,118 @@ export function ResultFrame({
   const shareOnWhatsApp = () => {
     const itinerary = readItinerary();
 
-    if (!itinerary) {
-      return;
-    }
+    if (!itinerary) return;
 
-    const dayLines = itinerary.days
-      ?.map(
-        (day, index) =>
-          `${day.day || `Day ${index + 1}`}: ${day.title || "Planned day"}`,
-      )
-      .join("\n");
+    const formatMoney = (amount?: number) =>
+      amount ? `₹${amount.toLocaleString("en-IN")}` : "N/A";
+
+    const route = `${itinerary.travelOptions?.toDestination[0]?.from} ➜ ${itinerary.destination}`;
+
+    const travelSection = [
+      "-------------------------",
+      "✈️ *Travel Options*",
+      "-------------------------",
+      "➡️ *To Destination*",
+      ...(itinerary.travelOptions?.toDestination || []).map(
+        (t: any) =>
+          `${t.mode === "flight" ? "✈️" : "🚆"} ${t.provider} ${t.number}
+            ${t.from} → ${t.to}
+            🕒 ${t.departureTime} - ${t.arrivalTime}
+            💺 ${t.class}
+            💰 ${formatMoney(t.cost)}`,
+      ),
+      "",
+      "⬅️ *Return Journey*",
+      ...(itinerary.travelOptions?.returnOptions || []).map(
+        (t: any) =>
+          `${t.mode === "flight" ? "✈️" : "🚆"} ${t.provider} ${t.number}
+              ${t.from} → ${t.to}
+              🕒 ${t.departureTime} - ${t.arrivalTime}
+              💺 ${t.class}
+              💰 ${formatMoney(t.cost)}`,
+      ),
+    ].join("\n");
+
+    const hotelSection = [
+      "-------------------------",
+      "🏨 *Hotel & Stay*",
+      "-------------------------",
+      ...(itinerary.stayOptions || []).map(
+        (hotel: any) =>
+          `🏨 *${hotel.name}*
+            📍 ${hotel.location}
+            ⭐ ${hotel.rating}
+            🛏️ ${hotel.roomCategory}
+            💵 ${formatMoney(hotel.pricePerNight)}/night`,
+      ),
+    ].join("\n");
+
+    const foodSection = [
+      "-------------------------",
+      "🍽️ *Food Options*",
+      "-------------------------",
+      ...(itinerary.foodOptions || []).map(
+        (food: any) =>
+          `📅 ${food.day}
+            🍴 ${food.items.join(", ")}
+            💰 ${formatMoney(food.cost)}`,
+      ),
+    ].join("\n");
+
+    const daySection = [
+      "----------------------------",
+      "🗓️ *Day Wise Plan*",
+      "----------------------------",
+      ...(itinerary.days || []).map((day: any) => {
+        const timeline =
+          day.timeline
+            ?.map((t: any) => `🕒 ${t.time}\n${t.activity}`)
+            .join("\n") || "";
+
+        const activities =
+          day.activities?.map((a: string) => `• ${a}`).join("\n") || "";
+
+        return `
+📅 *${day.day}*
+         
+🏔️ ${day.title}
+
+${timeline}
+
+🎯 Activities
+${activities}
+
+🍽️ Food to Try
+${day.food}
+
+🏨 Stay
+${day.stay}
+
+💰 Estimated Cost
+${formatMoney(day.estimatedDayCost)}\n\n`;
+      }),
+    ].join("\n");
 
     const message = [
-      "Travel Tuner Itinerary",
+      "🌍 *Travel Tuner Itinerary*",
+      "-------------------------",
+      "📍 *Route*",
+      route,
       "",
-      `Destination: ${itinerary.destination || "Your trip"}`,
-      `Budget: ${itinerary.totalEstimatedCost ? `₹${itinerary.totalEstimatedCost.toLocaleString("en-IN")}` : "Planned"}`,
+      "💰 *Estimated Trip Cost*",
+      formatMoney(itinerary.totalEstimatedCost),
       "",
-      itinerary.summary || "",
+      itinerary.summary,
       "",
-      dayLines || "",
+      travelSection,
+      "",
+      hotelSection,
+      "",
+      foodSection,
+      "",
+      daySection,
+      "",
+      "❤️ Generated using Travel Tuner ❤️",
     ].join("\n");
 
     window.open(

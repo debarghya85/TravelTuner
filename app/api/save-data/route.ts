@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { buildCoverImageUrl } from "../../../lib/cover-image";
 import { saveItineraryRecord } from "../../../lib/itinerary-store";
 import { getAuthenticatedUserFromRequest } from "../../../lib/user-auth";
 
@@ -10,9 +11,14 @@ export async function POST(req: Request) {
   }
 
   try {
+    const output = body.output || body.itinerary || body;
+    const coverImageUrl = buildCoverImageUrl(output.coverImagePrompt);
     await saveItineraryRecord({
       input: body.input || {},
-      output: body.output || body.itinerary || body,
+      output: {
+        ...output,
+        coverImageUrl,
+      },
       userId: user.id,
     });
   } catch (error) {

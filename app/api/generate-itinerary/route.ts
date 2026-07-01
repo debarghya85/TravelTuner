@@ -1,5 +1,6 @@
 import { buildPrompt } from "../../../utils/buildPrompt";
 import { callAI } from "../../../lib/ai";
+import { buildCoverImageUrl } from "../../../lib/cover-image";
 import { saveItineraryRecord } from "../../../lib/itinerary-store";
 import { getAuthenticatedUserFromRequest } from "../../../lib/user-auth";
 
@@ -13,11 +14,15 @@ export async function POST(req: Request) {
   const prompt = buildPrompt(body);
 
   const aiResponse = await callAI(prompt, Number(body.days));
+  const coverImageUrl = buildCoverImageUrl(aiResponse.coverImagePrompt);
 
   try {
     await saveItineraryRecord({
       input: body,
-      output: aiResponse,
+      output: {
+        ...aiResponse,
+        coverImageUrl,
+      },
       userId: user.id,
     });
   } catch (error) {

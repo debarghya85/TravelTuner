@@ -18,6 +18,7 @@ import { Itinerary, readItinerary } from "./itinerary-data";
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/result", label: "Itinerary", icon: CalendarDays },
+  { href: "/itineraries", label: "My Travel Plans", icon: CalendarDays },
   // { href: "/result/stays", label: "Saved", icon: Heart },
   // { href: "/result/travel", label: "Bookings", icon: BriefcaseBusiness },
   // { href: "/", label: "Profile", icon: UserRound },

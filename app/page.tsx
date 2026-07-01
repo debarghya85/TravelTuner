@@ -173,7 +173,7 @@ export default function LandingPage() {
           <a href="#pricing">Pricing</a>
           {user ? (
             <>
-              <Link href="/itineraries">My Itineraries</Link>
+              <Link href="/itineraries">My Travel Plans</Link>
               <div className="nav-profile-wrap" ref={profileRef}>
                 <button
                   className="nav-profile-pill"
@@ -213,7 +213,7 @@ export default function LandingPage() {
                     >
                       <CalendarDays size={18} />
                       <div>
-                        <strong>My itineraries</strong>
+                        <strong>My Travel Plans</strong>
                         <span>View all your saved trips</span>
                       </div>
                     </Link>
@@ -288,7 +288,7 @@ export default function LandingPage() {
           </div>
 
           <Link href="/generate-itinerary" className="generate-button">
-            Generate My Itinerary
+            Generate My Travel Plan
             <ArrowRight size={24} />
           </Link>
 

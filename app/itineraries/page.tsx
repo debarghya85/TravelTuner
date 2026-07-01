@@ -26,6 +26,9 @@ type ItineraryRecord = {
   output: {
     itinerary?: {
       destination?: string;
+      tagline?: string;
+      coverImagePrompt?: string;
+      coverImageUrl?: string;
       summary?: string;
       days?: { day?: string; title?: string }[];
       totalEstimatedCost?: number;
@@ -40,6 +43,9 @@ type ItineraryRecord = {
 
 type ItineraryPreview = {
   destination?: string;
+  tagline?: string;
+  coverImagePrompt?: string;
+  coverImageUrl?: string;
   summary?: string;
   days?: { day?: string; title?: string }[];
   totalEstimatedCost?: number;
@@ -55,16 +61,17 @@ type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
 type CardData = {
   id: string;
   image: string;
-  status: "Saved" | "Completed" | "Draft";
+  status: "" | "" | "";
   title: string;
+  tagline: string;
   subtitle: string;
   daysCount: number;
   adults: number;
   children: number;
   totalEstimatedCost: number;
   date: string;
-  action: "View Itinerary" | "Continue Planning";
-  tone: "saved" | "completed" | "draft";
+  action: "View Travel Plan" | "Continue Planning";
+  tone: "" | "" | "";
 };
 
 export default function ItineraryListPage() {
@@ -125,14 +132,14 @@ export default function ItineraryListPage() {
         const adults = itinerary.travelerInfo?.adults ?? 2;
         const children = itinerary.travelerInfo?.children ?? 0;
         const totalEstimatedCost = itinerary.totalEstimatedCost ?? 126000;
-        const status: CardData["status"] =
-          index % 3 === 1 ? "Completed" : index % 3 === 2 ? "Draft" : "Saved";
+        const status = "";
 
         return {
           id: item.id,
-          image: "/itinery_result.png",
+          image: itinerary.coverImageUrl || "/itinery_result.png",
           status,
           title: itinerary.destination || "Trip itinerary",
+          tagline: itinerary.tagline,
           subtitle:
             itinerary.summary ||
             itinerary.travelerInfo?.pricingCalculatedFor ||
@@ -146,13 +153,8 @@ export default function ItineraryListPage() {
             day: "numeric",
             year: "numeric",
           }),
-          action: "View Itinerary",
-          tone:
-            status === "Completed"
-              ? "completed"
-              : status === "Draft"
-                ? "draft"
-                : "saved",
+          action: "View Travel Plan",
+          tone: "",
         };
       }),
     [filteredItems],
@@ -177,11 +179,11 @@ export default function ItineraryListPage() {
         <nav className="itineraries-nav">
           <Link href="/" className="itineraries-nav-item">
             <Home size={18} />
-            <span>Dashboard</span>
+            <span>Home</span>
           </Link>
           <Link href="/itineraries" className="itineraries-nav-item active">
             <CalendarDays size={18} />
-            <span>My Itineraries</span>
+            <span>My Travel Plans</span>
           </Link>
         </nav>
 
@@ -194,25 +196,9 @@ export default function ItineraryListPage() {
             Let our AI craft the perfect itinerary for your next adventure..
           </p>
           <Link href="/generate-itinerary" className="premium-button">
-            Create New <ArrowRight size={16} />
+            Create New Travel Plan
           </Link>
-          <img src="/form_bg.jpg" alt="" />
         </div>
-
-        <button
-          type="button"
-          className="sidebar-phone"
-          onClick={() => setAccountOpen((v) => !v)}
-        >
-          <div>
-            <Smartphone size={18} />
-            <span>
-              <strong>{user ? `+91 ${user.mobile}` : "+91 89108 82091"}</strong>
-              <small>{user ? "Verified via OTP" : "Verified via OTP"}</small>
-            </span>
-          </div>
-          <ChevronRight size={20} />
-        </button>
       </aside>
 
       <section className="itineraries-stage">
@@ -220,7 +206,7 @@ export default function ItineraryListPage() {
           <div className="itineraries-title">
             <CalendarDays size={36} />
             <div>
-              <h1>My Itineraries</h1>
+              <h1>My Travel Plans</h1>
               <p>Manage and revisit all your saved trips.</p>
             </div>
           </div>
@@ -292,21 +278,18 @@ export default function ItineraryListPage() {
             {cards.map((card) => (
               <article className="itinerary-card" key={card.id}>
                 <div className={`itinerary-visual tone-${card.tone}`}>
-                  <img src={card.image} alt="" />
-                  <button
-                    type="button"
-                    className="heart-button"
-                    aria-label="Save itinerary"
-                  >
-                    <Heart size={18} />
-                  </button>
-                  <span className={`status-pill status-${card.tone}`}>
-                    {card.status}
-                  </span>
+                  <img
+                    src={card.image}
+                    alt=""
+                    onError={(event) => {
+                      event.currentTarget.src = "/itinery_result.png";
+                    }}
+                  />
                 </div>
 
                 <div className="itinerary-card-body">
                   <h2>{card.title}</h2>
+                  <p className="itinerary-tagline">{card.tagline}</p>
                   <div className="itinerary-details">
                     <div className="itinerary-info">
                       <div className="itinerary-detail-line">
@@ -345,27 +328,10 @@ export default function ItineraryListPage() {
               <h3>No itineraries found</h3>
               <p>Try a different search, or generate your first trip plan.</p>
               <Link className="premium-button" href="/generate-itinerary">
-                Create your first itinerary
+                Create your first travel plan
               </Link>
             </div>
           ) : null}
-
-          <section className="itineraries-banner">
-            <div className="banner-copy">
-              <Sparkles size={34} />
-              <div>
-                <h3>Plan smarter, travel better</h3>
-                <p>
-                  Let our AI craft the perfect itinerary for your next
-                  adventure.
-                </p>
-              </div>
-            </div>
-            <div className="banner-doodle" aria-hidden="true" />
-            <Link href="/generate-itinerary" className="banner-button">
-              Create New Itinerary <ArrowRight size={18} />
-            </Link>
-          </section>
         </section>
       </section>
     </main>

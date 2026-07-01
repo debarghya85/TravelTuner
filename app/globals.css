@@ -4308,15 +4308,15 @@ input[type="range"]::-moz-range-thumb {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 10px;
+  gap: 1px;
   min-height: 46px;
-  padding: 0 16px;
+  padding: 0 6px;
   border-radius: 14px;
   color: white;
   text-decoration: none;
   background: linear-gradient(135deg, #132359, #1d5fd4);
   box-shadow: 0 16px 36px rgba(20, 46, 94, 0.28);
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .sidebar-phone {
@@ -4645,12 +4645,18 @@ input[type="range"]::-moz-range-thumb {
   text-transform: capitalize;
 }
 
+.itinerary-tagline {
+  margin: -4px 0 0;
+  color: #516080;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  min-height: calc(1.45em * 3);
+}
+
 .itinerary-details {
-  /* display: grid;
-  gap: 8px;
-  margin-top: -2px; */
   display: flex;
-  align-items: left;
+  align-items: flex-start;
   gap: 16px;
   flex-direction: column;
 }

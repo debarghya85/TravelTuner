@@ -174,16 +174,76 @@ PLANNING RULES (VERY IMPORTANT)
    - dayTransport should describe sightseeing/intercity/local transfers for that day, for example:
      "Dedicated luxury SUV (Innova/Xylo) for sightseeing and intercity transfers"
    - Also include the same day-specific local transfer/sightseeing data inside each matching days[n].localTransport array
-10. DESTINATION COVER RULE:
-   - Generate one "coverImagePrompt" suitable for AI image generation.
-   - The prompt should create a stunning, cinematic, premium travel poster style image.
-   - It MUST represent the destination using its most iconic landmarks, landscapes, culture and atmosphere.
-   - The image should have a strong WOW factor suitable as a hero/banner image.
-   - Do NOT include people unless they are essential to the destination experience.
-   - Do NOT generate image URLs.
-   - Only return a descriptive prompt.
-   - Also generate a very short "tagline" (maximum 40 characters) describing the trip.
-   - The tagline should be catchy and suitable for displaying on a travel card.
+10. DESTINATION COVER IMAGE RULE (VERY IMPORTANT)
+
+- Generate one "coverImagePrompt" suitable for AI image generation.
+- The prompt MUST describe a premium tourism photograph of the destination.
+- It MUST represent the destination using its most iconic landmarks, landscapes, culture and atmosphere.
+- The destination should be instantly recognizable.
+- The image should have a strong WOW factor suitable for a homepage hero image or travel destination card.
+
+IMAGE STYLE
+- Bright sunny daytime.
+- Midday sunlight (10:00 AM–2:00 PM).
+- Clear blue sky whenever appropriate.
+- Vibrant natural colors.
+- Crystal clear visibility.
+- Natural lighting with soft shadows.
+- Rich greenery and realistic water colors where applicable.
+
+PHOTOGRAPHY STYLE
+- Ultra realistic.
+- Professional DSLR photography.
+- National Geographic quality.
+- HDR.
+- Wide-angle composition.
+- Premium tourism photography.
+- Ultra detailed.
+- Sharp focus.
+- 8K resolution.
+- Realistic textures.
+
+COMPOSITION
+- Focus on the destination's most iconic landmarks.
+- Include mountains, rivers, beaches, tea gardens, forests, temples, monuments, lakes or skyline wherever relevant.
+- Keep the scene open and uncluttered.
+- Avoid excessive zoom.
+
+STRICTLY AVOID
+- Sunrise.
+- Sunset.
+- Golden hour.
+- Dawn.
+- Dusk.
+- Evening.
+- Night scenes.
+- Orange or warm cinematic lighting.
+- Heavy fog.
+- Heavy haze.
+- Fantasy effects.
+- Posters.
+- Illustrations.
+- Cartoon style.
+- Text.
+- Logos.
+- Watermarks.
+- Captions.
+- Decorative borders.
+- Readable signboards.
+- People unless essential to the destination.
+
+- Do NOT generate image URLs.
+- Return ONLY the descriptive image prompt.
+11. TAGLINE RULE
+
+- Generate one "tagline".
+- Maximum length: 100 characters.
+- Make it catchy, memorable and travel-focused.
+- Suitable for displaying on a travel destination card.
+- Highlight the destination's unique experience.
+- Do not include prices.
+- Do not include emojis.
+- Do not use quotation marks.
 ====================
 OUTPUT RULES
 ====================
@@ -208,7 +268,7 @@ Ensure:
 - Last day localTransport MUST show hotel-to-station/airport transfer along with any local movement
 - "coverImagePrompt" MUST be present
 - "tagline" MUST be present
-- tagline length MUST NOT exceed 40 characters
+- tagline length MUST NOT exceed 100 characters
 - coverImagePrompt should be detailed enough for an AI image generator
 ====================
 OUTPUT FORMAT
@@ -220,8 +280,8 @@ Day 1, Day 2, Day 3 ... Day ${Number(data.days) || data.days}.
 
 {
   "summary": "string",
-  "tagline": "40 characters max",
-  "coverImagePrompt": "A breathtaking cinematic travel poster of DESTINATION featuring iconic landmarks, beautiful lighting, ultra realistic, vibrant colors, aerial perspective, premium tourism photography, 8k quality, no text, no watermark.",
+  "tagline": "100 characters max",
+  "coverImagePrompt": "Ultra realistic daytime travel photograph of DESTINATION featuring its most iconic landmarks, captured under bright midday sunlight (10 AM–2 PM), clear blue sky, vibrant natural colors, crystal clear atmosphere, lush landscapes, realistic water reflections where applicable, professional DSLR photography, HDR, National Geographic style, ultra detailed, sharp focus, wide-angle composition, premium tourism photography, 8K resolution, realistic textures, no people unless essential, no text, no logo, no watermark, no captions, no posters, no illustrations, no paintings, no sunrise, no sunset, no golden hour, no dawn, no dusk, no orange lighting, no dramatic cinematic lighting.",
   "destination": "${data.destination}",
 
   "bestTimeToVisit": "string",
@@ -485,7 +545,11 @@ FINAL VALIDATION CHECK (SELF VERIFY BEFORE OUTPUT)
 - Is "coverImagePrompt" present?
 - Is "coverImagePrompt" suitable for generating a premium hero image?
 - Is "tagline" present?
-- Is the tagline 40 characters or fewer?
+- Is the tagline 100 characters or fewer?
+- Does coverImagePrompt explicitly specify bright midday sunlight? (MUST be YES)
+- Does coverImagePrompt explicitly prohibit sunrise, sunset and golden hour? (MUST be YES)
+- Does coverImagePrompt explicitly prohibit text, logos and watermarks? (MUST be YES)
+- Does coverImagePrompt describe a realistic daytime travel photograph instead of a travel poster? (MUST be YES)
 Return ONLY the JSON.
 `;
 }

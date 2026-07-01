@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import {
+  ArrowLeft,
   ArrowRight,
   CalendarDays,
   ChevronDown,
@@ -12,7 +13,6 @@ import {
   Home,
   LogOut,
   MapPin,
-  Menu,
   Search,
   Settings,
   Smartphone,
@@ -80,6 +80,7 @@ export default function ItineraryListPage() {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [accountOpen, setAccountOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -166,7 +167,207 @@ export default function ItineraryListPage() {
   };
 
   return (
-    <main className="itineraries-shell scenic-shell">
+    <main className="itineraries-shell scenic-shell" id="top">
+      <section className="itineraries-mobile-stack">
+        <header className="itineraries-mobile-header1 result-mobile-header">
+          <Link href="/" className="result-mobile-logo">
+            <img
+              src="/tt_logo.png"
+              alt="Travel Tuner"
+              className="form-logo logo-small"
+            />
+          </Link>
+
+          <button
+            className="mobile-menu-button"
+            type="button"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="itineraries-mobile-menu"
+            aria-label="Open menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </header>
+
+        {mobileMenuOpen ? (
+          <>
+            <button
+              type="button"
+              className="result-menu-backdrop"
+              aria-label="Close menu"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div
+              className="landing-mobile-menu result-mobile-menu is-logged-in"
+              id="itineraries-mobile-menu"
+              role="menu"
+            >
+              <div className="landing-mobile-menu-user-card">
+                <span className="landing-mobile-menu-user-avatar">
+                  <UserRound size={42} />
+                </span>
+                <div>
+                  <strong>User Information</strong>
+                  <p>
+                    {user?.countryCode || "+91"} {user?.mobile || "---------"}
+                  </p>
+                </div>
+              </div>
+
+              <div className="landing-mobile-menu-links">
+                <Link
+                  href="/"
+                  className="landing-mobile-menu-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <Home size={18} />
+                  </span>
+                  <strong>Home</strong>
+                  <span className="landing-mobile-menu-link-arrow">›</span>
+                </Link>
+
+                <Link
+                  href="/itineraries"
+                  className="landing-mobile-menu-link active"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <CalendarDays size={18} />
+                  </span>
+                  <strong>My Travel Plans</strong>
+                  <span className="landing-mobile-menu-link-arrow">›</span>
+                </Link>
+
+                <Link
+                  href="/generate-itinerary"
+                  className="landing-mobile-menu-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <Sparkles size={18} />
+                  </span>
+                  <strong>Create New Travel Plan</strong>
+                  <span className="landing-mobile-menu-link-arrow">›</span>
+                </Link>
+              </div>
+
+              <button
+                type="button"
+                className="landing-mobile-menu-logout"
+                onClick={handleLogout}
+              >
+                <span className="landing-mobile-menu-item-icon">
+                  <LogOut size={18} />
+                </span>
+                <strong>Logout</strong>
+              </button>
+            </div>
+          </>
+        ) : null}
+
+        <section className="itineraries-mobile-hero">
+          <div className="itineraries-mobile-title">
+            <CalendarDays size={54} />
+            <div>
+              <h1>My Travel Plans</h1>
+              <p>Manage and revisit all your saved trips.</p>
+            </div>
+          </div>
+
+          <Link href="/generate-itinerary" className="itineraries-mobile-cta">
+            <span>
+              <span className="itineraries-mobile-cta-icon">
+                <span>+</span>
+              </span>
+              <strong>Create New Travel Plan</strong>
+            </span>
+            <ArrowRight size={28} />
+          </Link>
+
+          <label className="itinerary-search itineraries-mobile-search">
+            <Search size={20} />
+            <input
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search by destination..."
+            />
+          </label>
+        </section>
+
+        <section className="itineraries-mobile-list">
+          {cards.map((card) => (
+            <article className="itineraries-mobile-card" key={card.id}>
+              <div className="itineraries-mobile-card-image">
+                <img
+                  src={card.image}
+                  alt=""
+                  onError={(event) => {
+                    event.currentTarget.src = "/itinery_result.png";
+                  }}
+                />
+              </div>
+              <div className="itineraries-mobile-card-body">
+                <h2>{card.title}</h2>
+                <p>{card.tagline || card.subtitle}</p>
+                <div className="itineraries-mobile-card-meta">
+                  <div>
+                    <CalendarDays size={14} />
+                    <span>{card.daysCount} Days</span>
+                    <span className="divider" />
+                    <span>
+                      Total ₹{card.totalEstimatedCost.toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                  <div>
+                    <UserRound size={14} />
+                    <span>
+                      {card.adults} Adults {card.children} Children
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <Link
+                href={`/result/${card.id}`}
+                className="itineraries-mobile-card-link"
+              >
+                <ChevronRight size={28} />
+              </Link>
+            </article>
+          ))}
+
+          {!loading && !cards.length ? (
+            <div className="saved-empty itineraries-empty">
+              <h3>No itineraries found</h3>
+              <p>Try a different search, or generate your first trip plan.</p>
+              <Link className="premium-button" href="/generate-itinerary">
+                Create your first travel plan
+              </Link>
+            </div>
+          ) : null}
+        </section>
+
+        <div className="itineraries-mobile-footer">
+          <div className="itineraries-mobile-footer-card">
+            <Sparkles size={34} />
+            <div>
+              <strong>Plan smarter, travel better</strong>
+              <p>
+                Let our AI craft the perfect itinerary for your next adventure.
+              </p>
+            </div>
+            <ChevronRight size={26} />
+          </div>
+
+          <a href="#top" className="itineraries-mobile-top">
+            <span>↑</span>
+          </a>
+        </div>
+      </section>
+
       <aside className="itineraries-sidebar">
         <div className="brand-lockup itineraries-brand">
           <img src="/tt_logo.png" alt="Travel Tuner" />

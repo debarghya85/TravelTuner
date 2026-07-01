@@ -18,6 +18,7 @@ import {
   Plane,
   Share2,
   ShieldCheck,
+  ChevronRight,
   Sparkles,
   TicketCheck,
   WalletCards,
@@ -127,6 +128,7 @@ const pricingFeatures = [
 export default function LandingPage() {
   const [user, setUser] = useState<UserInfo>(null);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -156,6 +158,7 @@ export default function LandingPage() {
     await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     setProfileOpen(false);
+    setMobileMenuOpen(false);
     window.location.href = "/";
   };
 
@@ -247,7 +250,118 @@ export default function LandingPage() {
             </Link>
           )}
         </nav>
+
+        <div className="landing-mobile-actions">
+          <button
+            className="mobile-menu-button"
+            type="button"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="landing-mobile-menu"
+            aria-label="Open menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </div>
       </header>
+
+      {mobileMenuOpen ? (
+        <>
+          <button
+            type="button"
+            className="result-menu-backdrop"
+            aria-label="Close menu"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          <div
+            className={`landing-mobile-menu${user ? " is-logged-in" : ""}`}
+            id="landing-mobile-menu"
+            role="menu"
+          >
+            {user ? (
+              <>
+                <div className="landing-mobile-menu-user-card">
+                  <span className="landing-mobile-menu-user-avatar">
+                    <UserRound size={42} />
+                  </span>
+                  <div>
+                    <strong>User Information</strong>
+                    <p>
+                      {user.countryCode || "+91"} {user.mobile}
+                    </p>
+                  </div>
+                </div>
+
+                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Bell size={18} />
+                  </span>
+                  <strong>How It Works</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <CircleDollarSign size={18} />
+                  </span>
+                  <strong>Pricing</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <Link
+                  href="/itineraries"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <TicketCheck size={18} />
+                  </span>
+                  <strong>My Travel Plans</strong>
+                  <ChevronRight size={20} />
+                </Link>
+
+                <button
+                  type="button"
+                  className="landing-mobile-menu-logout"
+                  onClick={handleLogout}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <LogOut size={18} />
+                  </span>
+                  <strong>Logout</strong>
+                </button>
+              </>
+            ) : (
+              <>
+                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Bell size={18} />
+                  </span>
+                  <strong>How It Works</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <CircleDollarSign size={18} />
+                  </span>
+                  <strong>Pricing</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <UserRound size={18} />
+                  </span>
+                  <strong>Login</strong>
+                  <ChevronRight size={20} />
+                </Link>
+              </>
+            )}
+          </div>
+        </>
+      ) : null}
 
       <section
         className="landing-hero landing-hero-padding"

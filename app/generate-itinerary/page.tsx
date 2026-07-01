@@ -188,12 +188,6 @@ export default function GenerateItineraryPage() {
   return (
     <main className="generator-page">
       <section className="generator-shell">
-        <div className="generator-back">
-          <Link href="/">
-            <ArrowLeft size={18} />
-            Back to Home
-          </Link>
-        </div>
 
         <div className="generator-layout">
           <div className="mobile-generator-top">

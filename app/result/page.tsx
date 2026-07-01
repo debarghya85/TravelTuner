@@ -36,10 +36,19 @@ export default function ResultPage() {
   const travelOptions = [...arrivalOptions, ...departureOptions];
   const stays = itinerary.stayOptions || [];
   const local = itinerary.travelOptions?.localTransport?.[0];
+  const heroImage = itinerary.coverImageUrl || "/itinery_result.png";
 
   return (
     <ResultFrame>
       <section className="result-hero">
+        <img
+          className="result-hero-image"
+          src={heroImage}
+          alt=""
+          onError={(event) => {
+            event.currentTarget.src = "/itinery_result.png";
+          }}
+        />
         <div className="result-hero-copy">
           <img src="/tt_logo.png" alt="Travel Tuner" />
           <h1>Itinerary Results</h1>
@@ -103,7 +112,7 @@ export default function ResultPage() {
           </div>
           <p>{itinerary.summary}</p>
 
-          <div className="mini-grid">
+          <div className="mini-grid result-metrics">
             <div className="mini-tile">
               <MapPin size={20} />
               <span>Destination</span>
@@ -111,8 +120,13 @@ export default function ResultPage() {
             </div>
             <div className="mini-tile">
               <CalendarDays size={20} />
-              <span>Best Time</span>
-              <strong>{itinerary.bestTimeToVisit}</strong>
+              <span>Trip Length</span>
+              <strong>{days.length} Days</strong>
+            </div>
+            <div className="mini-tile">
+              <UsersRound size={20} />
+              <span>Travelers</span>
+              <strong>{travelerTotal(itinerary)}</strong>
             </div>
           </div>
         </section>
@@ -124,6 +138,9 @@ export default function ResultPage() {
             </span>
             <h2>Traveler Information</h2>
           </div>
+          <p className="traveler-info-copy">
+            {itinerary.travelerInfo?.adults || 0} Adults · {itinerary.travelerInfo?.children || 0} Children
+          </p>
           <div className="traveler-stats">
             <div>
               <UsersRound size={22} />

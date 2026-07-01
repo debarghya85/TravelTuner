@@ -4,12 +4,12 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  Bell,
   BriefcaseBusiness,
   CalendarDays,
-  Heart,
   Home,
   MapPin,
+  Share2,
+  Download,
   UserRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -23,6 +23,8 @@ const navItems = [
   // { href: "/result/travel", label: "Bookings", icon: BriefcaseBusiness },
   // { href: "/", label: "Profile", icon: UserRound },
 ];
+
+type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
 
 export function useStoredItinerary() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
@@ -51,6 +53,20 @@ export function ResultFrame({
 }) {
   const pathname = usePathname();
   const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<UserInfo>(null);
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const response = await fetch("/api/auth/me");
+      if (response.ok) {
+        const data = await response.json();
+        setUser(data.user);
+      }
+    };
+
+    loadUser();
+  }, []);
 
   const shareOnWhatsApp = () => {
     const itinerary = readItinerary();
@@ -176,6 +192,11 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
     );
   };
 
+  const handleLogout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
+    window.location.href = "/";
+  };
+
   const downloadPdf = () => {
     const itinerary = readItinerary();
 
@@ -188,6 +209,102 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
 
   return (
     <main className="result-app">
+      <div className="result-mobile-shell">
+        <header className="itineraries-mobile-header1 result-mobile-header">
+          <button
+            className="result-mobile-back"
+            type="button"
+            onClick={() => router.push(backHref || "/itineraries")}
+            aria-label="Back"
+          >
+            <ArrowLeft size={18} />
+            <span>Back</span>
+          </button>
+
+          <Link href="/" className="result-mobile-logo">
+            <img
+              src="/tt_logo.png"
+              alt="Travel Tuner"
+              className="form-logo logo-small"
+            />
+          </Link>
+          <button
+            className="mobile-menu-button"
+            type="button"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="result-mobile-menu"
+            aria-label="Open menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </header>
+
+        {mobileMenuOpen ? (
+          <>
+            <button
+              type="button"
+              className="result-menu-backdrop"
+              aria-label="Close menu"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div
+              className="landing-mobile-menu result-mobile-menu is-logged-in"
+              id="result-mobile-menu"
+              role="menu"
+            >
+              <div className="landing-mobile-menu-user-card">
+                <span className="landing-mobile-menu-user-avatar">
+                  <UserRound size={42} />
+                </span>
+                <div>
+                  <strong>User Information</strong>
+                  <p>
+                    {user?.countryCode || "+91"} {user?.mobile || "---------"}
+                  </p>
+                </div>
+              </div>
+              <div className="landing-mobile-menu-links">
+                {navItems.map((item) => {
+                  const Icon = item.icon;
+                  const active =
+                    item.label === "Itinerary"
+                      ? pathname.startsWith("/result")
+                      : pathname === item.href;
+
+                  return (
+                    <Link
+                      key={item.label}
+                      href={item.href}
+                      className={`landing-mobile-menu-link ${active ? "active" : ""}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <span className="landing-mobile-menu-item-icon">
+                        <Icon size={18} />
+                      </span>
+                      <strong>{item.label}</strong>
+                      <span className="landing-mobile-menu-link-arrow">›</span>
+                    </Link>
+                  );
+                })}
+              </div>
+              <button
+                type="button"
+                className="landing-mobile-menu-logout"
+                onClick={handleLogout}
+              >
+                <span className="landing-mobile-menu-item-icon">
+                  <UserRound size={18} />
+                </span>
+                <strong>Logout</strong>
+              </button>
+            </div>
+          </>
+        ) : null}
+      </div>
+
       <aside className="result-sidebar">
         <Link href="/" className="result-logo">
           <img src="/tt_logo.png" alt="Travel Tuner" />
@@ -262,48 +379,32 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
           </header>
         )}
 
-        <div className="result-mobile-actions">
-          <button
-            className="whatsapp-action"
-            type="button"
-            onClick={shareOnWhatsApp}
-          >
-            Share on WhatsApp
-          </button>
-          <button className="pdf-action" type="button" onClick={downloadPdf}>
-            Download as PDF
-          </button>
-        </div>
-
         <div className={aside ? "result-content-with-aside" : "result-content"}>
           <div>{children}</div>
           {aside ? (
             <aside className="result-detail-aside">{aside}</aside>
           ) : null}
         </div>
+
+        <div className="result-mobile-actions">
+          <button
+            className="whatsapp-action"
+            type="button"
+            onClick={shareOnWhatsApp}
+          >
+            <Share2 size={18} />
+            <span>Share on WhatsApp</span>
+          </button>
+          <button className="pdf-action" type="button" onClick={downloadPdf}>
+            <Download size={18} />
+            <span>Download as PDF</span>
+          </button>
+          <Link href="/generate-itinerary" className="primary-action">
+            <BriefcaseBusiness size={18} />
+            Plan Another Trip
+          </Link>
+        </div>
       </section>
-
-      <nav className="mobile-tabbar" aria-label="Mobile result navigation">
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          const active =
-            item.label === "Itinerary"
-              ? pathname.startsWith("/result")
-              : pathname === item.href;
-
-          return (
-            <Link
-              href={item.href}
-              className={active ? "active" : ""}
-              key={item.label}
-              aria-label={item.label}
-            >
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
     </main>
   );
 }

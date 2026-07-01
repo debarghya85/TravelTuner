@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Eye } from "lucide-react";
+import { ArrowLeft, CalendarDays, ChevronRight, Eye, Home, LogOut, Sparkles, UserRound } from "lucide-react";
 
 type RecordItem = {
   id: string;
@@ -173,6 +173,7 @@ export default function TravelAdminDashboard() {
   const [authenticated, setAuthenticated] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<RecordItem | null>(null);
   const [loadingRecords, setLoadingRecords] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!authenticated) {
@@ -276,13 +277,106 @@ export default function TravelAdminDashboard() {
   return (
     <main className="admin-shell">
       <section className="admin-card admin-dashboard">
-        <div className="admin-header">
+        <div className="admin-header admin-desktop-header">
           <div>
             <p className="admin-kicker">Travel Admin</p>
             <h1>Generated Itineraries</h1>
           </div>
           <button onClick={logout}>Logout</button>
         </div>
+
+        <header className="result-mobile-header admin-mobile-header">
+          <button
+            className="result-mobile-back"
+            type="button"
+            onClick={() => router.push("/")}
+            aria-label="Back to home"
+          >
+            <Home size={18} />
+            <span>Home</span>
+          </button>
+
+          <div className="admin-mobile-title">
+            <p className="admin-kicker">Travel Admin</p>
+            <strong>Generated Itineraries</strong>
+          </div>
+
+          <button
+            className="mobile-menu-button"
+            type="button"
+            onClick={() => setMobileMenuOpen((current) => !current)}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="admin-mobile-menu"
+            aria-label="Open menu"
+          >
+            <span />
+            <span />
+            <span />
+          </button>
+        </header>
+
+        {mobileMenuOpen ? (
+          <>
+            <button
+              type="button"
+              className="result-menu-backdrop"
+              aria-label="Close menu"
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            <div className="landing-mobile-menu result-mobile-menu is-logged-in" id="admin-mobile-menu" role="menu">
+              <div className="landing-mobile-menu-user-card">
+                <span className="landing-mobile-menu-user-avatar">
+                  <UserRound size={42} />
+                </span>
+                <div>
+                  <strong>Admin Account</strong>
+                  <p>{email}</p>
+                </div>
+              </div>
+
+              <div className="landing-mobile-menu-links">
+                <Link href="/" className="landing-mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Home size={18} />
+                  </span>
+                  <strong>Home</strong>
+                  <ChevronRight size={20} />
+                </Link>
+
+                <Link
+                  href="/itineraries"
+                  className="landing-mobile-menu-link active"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <CalendarDays size={18} />
+                  </span>
+                  <strong>My Travel Plans</strong>
+                  <ChevronRight size={20} />
+                </Link>
+
+                <Link
+                  href="/generate-itinerary"
+                  className="landing-mobile-menu-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <Sparkles size={18} />
+                  </span>
+                  <strong>Create New Travel Plan</strong>
+                  <ChevronRight size={20} />
+                </Link>
+              </div>
+
+              <button type="button" className="landing-mobile-menu-logout" onClick={logout}>
+                <span className="landing-mobile-menu-item-icon">
+                  <LogOut size={18} />
+                </span>
+                <strong>Logout</strong>
+              </button>
+            </div>
+          </>
+        ) : null}
 
         <div className="admin-table-wrap">
           <table className="admin-table">

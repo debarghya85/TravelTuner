@@ -2766,6 +2766,44 @@ input[type="range"]::-moz-range-thumb {
   justify-content: center;
 }
 
+.generator-back-link {
+  align-self: flex-start;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 18px;
+  padding: 10px 16px;
+  color: #0f3f9e;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(240, 246, 255, 0.92));
+  border: 1px solid rgba(79, 125, 236, 0.18);
+  border-radius: 999px;
+  box-shadow:
+    0 10px 24px rgba(18, 57, 123, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.generator-back-link:hover {
+  transform: translateY(-1px);
+  border-color: rgba(79, 125, 236, 0.3);
+  box-shadow:
+    0 14px 28px rgba(18, 57, 123, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.88);
+}
+
+.generator-back-link:focus-visible {
+  outline: 3px solid rgba(59, 130, 246, 0.26);
+  outline-offset: 2px;
+}
+
 .form-logo {
   width: auto;
   max-width: 420px;
@@ -3448,7 +3486,7 @@ input[type="range"]::-moz-range-thumb {
       linear-gradient(180deg, #eaf2ff 0%, #f8fbff 46%, #ffffff 100%);
   }
 
-  .generator-back {
+  .generator-back-link {
     display: none;
   }
 
@@ -3509,6 +3547,10 @@ input[type="range"]::-moz-range-thumb {
     border: 1px solid rgba(255, 255, 255, 0.82);
     border-radius: 12px;
     box-shadow: 0 8px 16px rgba(37, 99, 235, 0.12);
+  }
+
+  .mobile-back-icon {
+    display: none;
   }
 
   .mobile-brand-lockup {

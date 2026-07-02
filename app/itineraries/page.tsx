@@ -19,6 +19,7 @@ import {
   Sparkles,
   UserRound,
 } from "lucide-react";
+import { setLoginReturnPath } from "../../lib/login-redirect";
 
 type ItineraryRecord = {
   id: string;
@@ -166,6 +167,16 @@ export default function ItineraryListPage() {
     window.location.href = "/";
   };
 
+  const handleCreateTravelPlan = () => {
+    if (user) {
+      window.location.href = "/generate-itinerary";
+      return;
+    }
+
+    setLoginReturnPath("/generate-itinerary");
+    window.location.href = "/login";
+  };
+
   return (
     <main className="itineraries-shell scenic-shell" id="top">
       <section className="itineraries-mobile-stack">
@@ -242,17 +253,20 @@ export default function ItineraryListPage() {
                   <span className="landing-mobile-menu-link-arrow">›</span>
                 </Link>
 
-                <Link
-                  href="/generate-itinerary"
+                <button
+                  type="button"
                   className="landing-mobile-menu-link"
-                  onClick={() => setMobileMenuOpen(false)}
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    handleCreateTravelPlan();
+                  }}
                 >
                   <span className="landing-mobile-menu-item-icon">
                     <Sparkles size={18} />
                   </span>
                   <strong>Create New Travel Plan</strong>
                   <span className="landing-mobile-menu-link-arrow">›</span>
-                </Link>
+                </button>
               </div>
 
               <button
@@ -278,7 +292,11 @@ export default function ItineraryListPage() {
             </div>
           </div>
 
-          <Link href="/generate-itinerary" className="itineraries-mobile-cta">
+          <button
+            type="button"
+            className="itineraries-mobile-cta"
+            onClick={handleCreateTravelPlan}
+          >
             <span>
               <span className="itineraries-mobile-cta-icon">
                 <span>+</span>
@@ -286,7 +304,7 @@ export default function ItineraryListPage() {
               <strong>Create New Travel Plan</strong>
             </span>
             <ArrowRight size={28} />
-          </Link>
+          </button>
 
           <label className="itinerary-search itineraries-mobile-search">
             <Search size={20} />
@@ -343,9 +361,13 @@ export default function ItineraryListPage() {
             <div className="saved-empty itineraries-empty">
               <h3>No itineraries found</h3>
               <p>Try a different search, or generate your first trip plan.</p>
-              <Link className="premium-button" href="/generate-itinerary">
+              <button
+                className="premium-button"
+                type="button"
+                onClick={handleCreateTravelPlan}
+              >
                 Create your first travel plan
-              </Link>
+              </button>
             </div>
           ) : null}
         </section>
@@ -396,9 +418,13 @@ export default function ItineraryListPage() {
           <p>
             Let our AI craft the perfect itinerary for your next adventure..
           </p>
-          <Link href="/generate-itinerary" className="premium-button">
+          <button
+            type="button"
+            className="premium-button"
+            onClick={handleCreateTravelPlan}
+          >
             Create New Travel Plan
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -528,9 +554,13 @@ export default function ItineraryListPage() {
             <div className="saved-empty itineraries-empty">
               <h3>No itineraries found</h3>
               <p>Try a different search, or generate your first trip plan.</p>
-              <Link className="premium-button" href="/generate-itinerary">
+              <button
+                className="premium-button"
+                type="button"
+                onClick={handleCreateTravelPlan}
+              >
                 Create your first travel plan
-              </Link>
+              </button>
             </div>
           ) : null}
         </section>

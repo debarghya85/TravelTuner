@@ -28,6 +28,7 @@ import {
   UserRound,
   Smartphone,
 } from "lucide-react";
+import { setLoginReturnPath } from "../lib/login-redirect";
 
 type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
 
@@ -160,6 +161,16 @@ export default function LandingPage() {
     setProfileOpen(false);
     setMobileMenuOpen(false);
     window.location.href = "/";
+  };
+
+  const handleGenerateTravelPlan = () => {
+    if (user) {
+      window.location.href = "/generate-itinerary";
+      return;
+    }
+
+    setLoginReturnPath("/generate-itinerary");
+    window.location.href = "/login";
   };
 
   return (
@@ -401,10 +412,14 @@ export default function LandingPage() {
             })}
           </div>
 
-          <Link href="/generate-itinerary" className="generate-button">
+          <button
+            type="button"
+            className="generate-button"
+            onClick={handleGenerateTravelPlan}
+          >
             Generate My Travel Plan
             <ArrowRight size={24} />
-          </Link>
+          </button>
 
           <p className="payment-note">
             <ShieldCheck size={17} />

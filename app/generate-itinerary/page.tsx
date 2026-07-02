@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { saveItinerary } from "../result/itinerary-data";
+import { setLoginReturnPath } from "../../lib/login-redirect";
 
 const travelImages = [
   "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=1200",
@@ -76,6 +76,10 @@ export default function GenerateItineraryPage() {
 
   const getImg = (offset: number) =>
     travelImages[(imageIndex + offset) % travelImages.length];
+
+  const handleBack = () => {
+    router.push("/");
+  };
 
   const handleChange = (
     event:
@@ -168,6 +172,7 @@ export default function GenerateItineraryPage() {
 
       if (!response.ok) {
         if (response.status === 401) {
+          setLoginReturnPath("/generate-itinerary");
           router.push("/login");
           return;
         }
@@ -188,12 +193,16 @@ export default function GenerateItineraryPage() {
   return (
     <main className="generator-page">
       <section className="generator-shell">
-
         <div className="generator-layout">
           <div className="mobile-generator-top">
-            <Link href="/" className="mobile-back-icon" aria-label="Back to home">
+            <button
+              type="button"
+              className="mobile-back-icon"
+              aria-label="Go back"
+              onClick={handleBack}
+            >
               <ArrowLeft size={20} />
-            </Link>
+            </button>
             <div className="mobile-brand-lockup">
               <img src="/tt_logo.png" alt="Travel Tuner" />
               <span>AI TRIP PLANNER</span>
@@ -201,6 +210,15 @@ export default function GenerateItineraryPage() {
           </div>
 
           <div className="generator-copy">
+            <button
+              type="button"
+              className="generator-back-link"
+              aria-label="Go back"
+              onClick={handleBack}
+            >
+              <ArrowLeft size={18} />
+              <span>Back</span>
+            </button>
             <img src="/tt_logo.png" alt="Travel Tuner" className="form-logo" />
 
             <form className="trip-builder-form" onSubmit={handleSubmit}>

@@ -13,6 +13,7 @@ import {
   Sparkles,
   Smartphone,
 } from "lucide-react";
+import { consumeLoginReturnPath } from "../../lib/login-redirect";
 
 const COUNTRY_CODES = ["+91", "+1", "+44", "+61", "+971", "+65", "+81"];
 
@@ -52,7 +53,7 @@ export default function LoginPage() {
         body: JSON.stringify({ countryCode, mobile: digitsOnly, otp }),
       });
       if (!response.ok) throw new Error();
-      router.push("/itineraries");
+      router.push(consumeLoginReturnPath() || "/itineraries");
     } finally {
       setLoading(false);
     }

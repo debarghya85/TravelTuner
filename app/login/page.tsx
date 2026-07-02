@@ -24,6 +24,7 @@ export default function LoginPage() {
   const [otp, setOtp] = useState("");
   const [step, setStep] = useState<1 | 2>(1);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const digitsOnly = useMemo(
     () => mobile.replace(/\D/g, "").slice(0, 15),
     [mobile],
@@ -31,14 +32,21 @@ export default function LoginPage() {
 
   const sendOtp = async () => {
     setLoading(true);
+    setError("");
     try {
       const response = await fetch("/api/auth/send-otp", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ countryCode, mobile: digitsOnly }),
       });
-      if (!response.ok) throw new Error();
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "Failed to send OTP");
+      }
       setStep(2);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to send OTP");
     } finally {
       setLoading(false);
     }
@@ -46,14 +54,21 @@ export default function LoginPage() {
 
   const verifyOtp = async () => {
     setLoading(true);
+    setError("");
     try {
       const response = await fetch("/api/auth/verify-otp", {
         method: "POST",
+        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ countryCode, mobile: digitsOnly, otp }),
       });
-      if (!response.ok) throw new Error();
-      router.push(consumeLoginReturnPath() || "/itineraries");
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.message || "OTP verification failed");
+      }
+      window.location.assign(consumeLoginReturnPath() || "/itineraries");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "OTP verification failed");
     } finally {
       setLoading(false);
     }
@@ -148,6 +163,8 @@ export default function LoginPage() {
             <CheckCircle2 size={16} />
             We never share your number with anyone.
           </p>
+
+          {error ? <p className="login-error">{error}</p> : null}
         </section>
 
         <div className="login-copy-content login-copy-content--mobile">
@@ -307,6 +324,8 @@ export default function LoginPage() {
           <CheckCircle2 size={16} />
           We never share your number with anyone.
         </p>
+
+        {error ? <p className="login-error">{error}</p> : null}
       </section>
     </main>
   );

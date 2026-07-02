@@ -26,6 +26,14 @@ export function normalizeCountryCode(countryCode: string) {
   return digits ? `+${digits}` : "+91";
 }
 
+export function createStableUserId(countryCode: string, mobile: string) {
+  return crypto
+    .createHash("sha256")
+    .update(`${normalizeCountryCode(countryCode)}:${normalizeMobile(mobile)}`)
+    .digest("hex")
+    .slice(0, 24);
+}
+
 export function createUserSessionToken(user: { id: string; mobile: string }) {
   const issuedAt = Date.now().toString();
   const payload = `${user.id}:${user.mobile}:${issuedAt}`;

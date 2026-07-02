@@ -74,6 +74,7 @@ export type FoodOption = {
 export type Itinerary = {
   summary?: string;
   destination?: string;
+  coverImageUrl?: string;
   bestTimeToVisit?: string;
   travelerInfo?: {
     adults?: number;

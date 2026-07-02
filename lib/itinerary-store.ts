@@ -14,7 +14,10 @@ const COLLECTION_NAMES = [
   "itinerary_generations",
   "Itinerary_generations",
 ];
-const DATABASE_NAMES = ["travel_tuner", "test"];
+
+function getDatabaseName() {
+  return process.env.MONGODB_DB_NAME || "travel_tuner";
+}
 
 function normalizeRecord(record: {
   _id: { toString: () => string };
@@ -52,18 +55,17 @@ export async function saveItineraryRecord(data: {
 
 export async function listItineraryRecords() {
   const client = await connectMongoClient();
+  const dbName = getDatabaseName();
   const records = await Promise.all(
-    DATABASE_NAMES.flatMap((dbName) =>
-      COLLECTION_NAMES.map(async (collectionName) => {
-        return client
-          .db(dbName)
-          .collection(collectionName)
-          .find({})
-          .sort({ createdAt: -1 })
-          .limit(200)
-          .toArray();
-      }),
-    ),
+    COLLECTION_NAMES.map(async (collectionName) => {
+      return client
+        .db(dbName)
+        .collection(collectionName)
+        .find({})
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .toArray();
+    }),
   );
 
   const merged = records
@@ -80,18 +82,17 @@ export async function listItineraryRecords() {
 export async function listItineraryRecordsByUser(userId: string) {
   const client = await connectMongoClient();
   const queryUserId = new ObjectId(userId);
+  const dbName = getDatabaseName();
   const records = await Promise.all(
-    DATABASE_NAMES.flatMap((dbName) =>
-      COLLECTION_NAMES.map(async (collectionName) => {
-        return client
-          .db(dbName)
-          .collection(collectionName)
-          .find({ userId: queryUserId })
-          .sort({ createdAt: -1 })
-          .limit(200)
-          .toArray();
-      }),
-    ),
+    COLLECTION_NAMES.map(async (collectionName) => {
+      return client
+        .db(dbName)
+        .collection(collectionName)
+        .find({ userId: queryUserId })
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .toArray();
+    }),
   );
 
   return records
@@ -103,12 +104,11 @@ export async function listItineraryRecordsByUser(userId: string) {
 
 export async function getItineraryRecordById(recordId: string) {
   const client = await connectMongoClient();
-  for (const dbName of DATABASE_NAMES) {
-    for (const collectionName of COLLECTION_NAMES) {
-      const record = await client.db(dbName).collection(collectionName).findOne({ _id: new ObjectId(recordId) });
-      if (record) {
-        return normalizeRecord(record as any);
-      }
+  const dbName = getDatabaseName();
+  for (const collectionName of COLLECTION_NAMES) {
+    const record = await client.db(dbName).collection(collectionName).findOne({ _id: new ObjectId(recordId) });
+    if (record) {
+      return normalizeRecord(record as any);
     }
   }
 
@@ -118,16 +118,15 @@ export async function getItineraryRecordById(recordId: string) {
 export async function getItineraryRecordByIdForUser(recordId: string, userId: string) {
   const client = await connectMongoClient();
   const queryUserId = new ObjectId(userId);
+  const dbName = getDatabaseName();
 
-  for (const dbName of DATABASE_NAMES) {
-    for (const collectionName of COLLECTION_NAMES) {
-      const record = await client
-        .db(dbName)
-        .collection(collectionName)
-        .findOne({ _id: new ObjectId(recordId), userId: queryUserId });
-      if (record) {
-        return normalizeRecord(record as any);
-      }
+  for (const collectionName of COLLECTION_NAMES) {
+    const record = await client
+      .db(dbName)
+      .collection(collectionName)
+      .findOne({ _id: new ObjectId(recordId), userId: queryUserId });
+    if (record) {
+      return normalizeRecord(record as any);
     }
   }
 

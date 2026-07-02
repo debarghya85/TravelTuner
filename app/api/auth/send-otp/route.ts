@@ -14,6 +14,6 @@ export async function POST(req: Request) {
     success: true,
     mobile,
     countryCode,
-    otp: process.env.NODE_ENV === "production" ? undefined : "123456",
+    otp: "123456",
   });
 }

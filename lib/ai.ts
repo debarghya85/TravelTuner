@@ -1,16 +1,18 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const MODEL_TIMEOUT_MS = Number(process.env.GEMINI_REQUEST_TIMEOUT_MS || 120000);
 
 const MODEL_CANDIDATES = (
   process.env.GEMINI_MODEL_FALLBACKS?.split(",") ?? [
     "gemini-2.5-flash",
-    "gemini-3.5-flash",
-    "gemini-1.5-flash",
+    "gemini-2.5-flash-lite",
   ]
 )
   .map((model) => model.trim())
   .filter(Boolean);
+const PRIMARY_MODEL = MODEL_CANDIDATES[0] || "gemini-2.5-flash";
+const ENABLE_MODEL_FALLBACKS = String(process.env.GEMINI_ENABLE_MODEL_FALLBACKS ?? "true").toLowerCase() === "true";
 
 function getModel(modelName: string) {
   return genAI.getGenerativeModel({
@@ -43,11 +45,17 @@ function hasExpectedDays(payload: any, expectedDays?: number) {
 
 async function generateJson(prompt: string) {
   let lastError: unknown;
+  const modelNames = ENABLE_MODEL_FALLBACKS ? MODEL_CANDIDATES : [PRIMARY_MODEL];
 
-  for (const modelName of MODEL_CANDIDATES) {
+  for (const modelName of modelNames) {
     try {
       const model = getModel(modelName);
-      const result = await model.generateContent(prompt);
+      const result = await Promise.race([
+        model.generateContent(prompt),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Gemini request timed out after ${MODEL_TIMEOUT_MS}ms`)), MODEL_TIMEOUT_MS),
+        ),
+      ]);
       const text = result.response.text();
 
       console.log(`RAW AI (${modelName}):`, text);
@@ -55,6 +63,11 @@ async function generateJson(prompt: string) {
       return parseJsonResponse(text);
     } catch (error: any) {
       lastError = error;
+
+      if (!ENABLE_MODEL_FALLBACKS) {
+        throw error;
+      }
+
       const status = error?.status;
       const retryable = status === 429 || status === 503 || status === 504;
 
@@ -103,7 +116,7 @@ async function generateJsonWithRetry(prompt: string, attempts = 3) {
 
 export async function callAI(prompt: string, expectedDays?: number) {
   try {
-    const firstResponse = await generateJsonWithRetry(prompt);
+    const firstResponse = await generateJsonWithRetry(prompt, 2);
 
     if (hasExpectedDays(firstResponse, expectedDays)) {
       return firstResponse;
@@ -129,7 +142,7 @@ Original instructions:
 ${prompt}
 `;
 
-    const secondResponse = await generateJsonWithRetry(repairPrompt);
+    const secondResponse = await generateJsonWithRetry(repairPrompt, 2);
 
     if (!hasExpectedDays(secondResponse, expectedDays)) {
       console.warn(
@@ -141,11 +154,6 @@ ${prompt}
   } catch (error) {
     console.error("AI ERROR:", error);
 
-    return {
-      summary: "Failed to generate itinerary",
-      days: [],
-      budget: {},
-      tips: ["Please try again"],
-    };
+    throw error;
   }
 }

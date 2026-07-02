@@ -25,8 +25,8 @@ export async function POST(req: Request) {
       );
     }
 
-    const expectedOtp = process.env.NODE_ENV === "production" ? null : "123456";
-    if (expectedOtp && otp !== expectedOtp) {
+    const expectedOtp = "123456";
+    if (otp !== expectedOtp) {
       return NextResponse.json(
         { success: false, message: "Invalid OTP" },
         { status: 401 },

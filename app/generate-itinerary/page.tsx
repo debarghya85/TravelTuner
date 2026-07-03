@@ -13,8 +13,9 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { saveItinerary } from "../result/itinerary-data";
 import { setLoginReturnPath } from "../../lib/login-redirect";
+
+const JOB_KEY = "travel-tuner:last-job-id";
 
 const travelImages = [
   "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=1200",
@@ -162,7 +163,7 @@ export default function GenerateItineraryPage() {
         budget: Number(form.budget),
       };
 
-      const response = await fetch("/api/generate-itinerary", {
+      const response = await fetch("/api/itinerary-jobs/start", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -188,8 +189,14 @@ export default function GenerateItineraryPage() {
       }
 
       const data = await response.json();
-      saveItinerary(data);
-      router.push("/result");
+      if (!data?.success) {
+        throw new Error("Failed to start itinerary generation");
+      }
+
+      if (data.jobId) {
+        window.sessionStorage.setItem(JOB_KEY, String(data.jobId));
+      }
+      router.push("/generate-itinerary/loading");
     } catch (error) {
       console.error(error);
       alert(error instanceof Error ? error.message : "Something went wrong!");

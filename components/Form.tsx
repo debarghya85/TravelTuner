@@ -2,21 +2,20 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { saveItinerary } from "../app/result/itinerary-data";
 
 export default function Form() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const handleSubmit = async (e: any) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoading(true);
 
     try {
-      const res = await fetch("/api/generate-itinerary", {
+      const res = await fetch("/api/itinerary-jobs/start", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json", // ✅ IMPORTANT
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           source: "Kolkata",
@@ -31,9 +30,13 @@ export default function Form() {
       }
 
       const data = await res.json();
-
-      saveItinerary(data);
-      router.push("/result");
+      if (data?.jobId) {
+        window.sessionStorage.setItem(
+          "travel-tuner:last-job-id",
+          String(data.jobId),
+        );
+      }
+      router.push("/generate-itinerary/loading");
     } catch (error) {
       console.error(error);
       alert("Something went wrong!");

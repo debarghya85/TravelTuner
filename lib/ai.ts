@@ -43,6 +43,16 @@ function hasExpectedDays(payload: any, expectedDays?: number) {
   return Array.isArray(payload?.days) && payload.days.length >= expectedDays;
 }
 
+function isRetryableError(error: any) {
+  const status = error?.status;
+  if (status === 429 || status === 503 || status === 504) {
+    return true;
+  }
+
+  const message = String(error?.message || "");
+  return error instanceof SyntaxError || /Invalid JSON response|Unexpected token|Expected ',' or '}'/.test(message);
+}
+
 async function generateJson(prompt: string) {
   let lastError: unknown;
   const modelNames = ENABLE_MODEL_FALLBACKS ? MODEL_CANDIDATES : [PRIMARY_MODEL];
@@ -69,7 +79,7 @@ async function generateJson(prompt: string) {
       }
 
       const status = error?.status;
-      const retryable = status === 429 || status === 503 || status === 504;
+      const retryable = isRetryableError(error);
 
       if (!retryable) {
         throw error;
@@ -97,7 +107,7 @@ async function generateJsonWithRetry(prompt: string, attempts = 3) {
     } catch (error: any) {
       lastError = error;
       const status = error?.status;
-      const retryable = status === 429 || status === 503 || status === 504;
+      const retryable = isRetryableError(error);
 
       if (!retryable || attempt === attempts) {
         throw error;

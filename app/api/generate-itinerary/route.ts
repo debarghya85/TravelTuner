@@ -4,6 +4,9 @@ import { buildCoverImageUrl } from "../../../lib/cover-image";
 import { saveItineraryRecord } from "../../../lib/itinerary-store";
 import { getAuthenticatedUserFromRequest } from "../../../lib/user-auth";
 
+export const runtime = "nodejs";
+export const maxDuration = 120;
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();

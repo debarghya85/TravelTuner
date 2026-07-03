@@ -171,12 +171,20 @@ export default function GenerateItineraryPage() {
       });
 
       if (!response.ok) {
+        let message = "Failed to generate itinerary";
+        try {
+          const errorData = await response.json();
+          message = errorData?.error || errorData?.message || message;
+        } catch {
+          // Ignore non-JSON error bodies and fall back to the default message.
+        }
+
         if (response.status === 401) {
           setLoginReturnPath("/generate-itinerary");
           router.push("/login");
           return;
         }
-        throw new Error("Failed to generate itinerary");
+        throw new Error(message);
       }
 
       const data = await response.json();
@@ -184,7 +192,7 @@ export default function GenerateItineraryPage() {
       router.push("/result");
     } catch (error) {
       console.error(error);
-      alert("Something went wrong!");
+      alert(error instanceof Error ? error.message : "Something went wrong!");
     } finally {
       setLoading(false);
     }

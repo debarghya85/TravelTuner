@@ -1,7 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
-const MODEL_TIMEOUT_MS = Number(process.env.GEMINI_REQUEST_TIMEOUT_MS || 120000);
+const MODEL_TIMEOUT_MS = Number(process.env.GEMINI_REQUEST_TIMEOUT_MS || 110000);
 
 const MODEL_CANDIDATES = (
   process.env.GEMINI_MODEL_FALLBACKS?.split(",") ?? [
@@ -116,7 +116,7 @@ async function generateJsonWithRetry(prompt: string, attempts = 3) {
 
 export async function callAI(prompt: string, expectedDays?: number) {
   try {
-    const firstResponse = await generateJsonWithRetry(prompt, 2);
+    const firstResponse = await generateJsonWithRetry(prompt, 1);
 
     if (hasExpectedDays(firstResponse, expectedDays)) {
       return firstResponse;
@@ -142,7 +142,7 @@ Original instructions:
 ${prompt}
 `;
 
-    const secondResponse = await generateJsonWithRetry(repairPrompt, 2);
+    const secondResponse = await generateJsonWithRetry(repairPrompt, 1);
 
     if (!hasExpectedDays(secondResponse, expectedDays)) {
       console.warn(

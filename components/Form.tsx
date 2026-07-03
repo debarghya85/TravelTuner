@@ -36,7 +36,7 @@ export default function Form() {
           String(data.jobId),
         );
       }
-      router.push("/generate-itinerary/loading");
+      router.push("/progress");
     } catch (error) {
       console.error(error);
       alert("Something went wrong!");

@@ -196,7 +196,7 @@ export default function GenerateItineraryPage() {
       if (data.jobId) {
         window.sessionStorage.setItem(JOB_KEY, String(data.jobId));
       }
-      router.push("/generate-itinerary/loading");
+      router.push("/progress");
     } catch (error) {
       console.error(error);
       alert(error instanceof Error ? error.message : "Something went wrong!");

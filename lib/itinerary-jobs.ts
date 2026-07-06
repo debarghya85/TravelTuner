@@ -2,7 +2,7 @@ import crypto from "crypto";
 import { ObjectId } from "mongodb";
 import { connectDB } from "./mongodb";
 
-export type ItineraryJobStatus = "queued" | "processing" | "saving" | "done" | "failed";
+export type ItineraryJobStatus = "pending" | "processing" | "completed" | "failed";
 
 export type StoredItineraryJob = {
   id: string;
@@ -40,8 +40,8 @@ function normalizeJob(record: {
     id: record._id.toString(),
     userId: record.userId.toString(),
     secret: record.secret,
-    status: record.status || "queued",
-    stage: record.stage || "Queued",
+    status: record.status || "pending",
+    stage: record.stage || "Pending",
     input: record.input || {},
     output: record.output || null,
     error: record.error || null,
@@ -63,8 +63,8 @@ export async function createItineraryJob(data: {
   const result = await db.collection(COLLECTION_NAME).insertOne({
     userId: new ObjectId(data.userId),
     secret,
-    status: "queued" as const,
-    stage: "Queued",
+    status: "pending" as const,
+    stage: "Pending",
     input: data.input,
     output: null,
     error: null,
@@ -76,8 +76,8 @@ export async function createItineraryJob(data: {
     _id: result.insertedId,
     userId: data.userId,
     secret,
-    status: "queued",
-    stage: "Queued",
+    status: "pending",
+    stage: "Pending",
     input: data.input,
     output: null,
     error: null,
@@ -113,4 +113,24 @@ export async function updateItineraryJob(jobId: string, patch: Partial<Pick<Stor
       },
     },
   );
+}
+
+export async function claimItineraryJobForProcessing(jobId: string) {
+  const db = await connectDB();
+  const now = new Date();
+
+  const result = await db.collection(COLLECTION_NAME).findOneAndUpdate(
+    { _id: new ObjectId(jobId), status: "pending" },
+    {
+      $set: {
+        status: "processing",
+        stage: "Processing",
+        updatedAt: now,
+      },
+    },
+    { returnDocument: "after" },
+  );
+
+  const doc = (result as any)?.value ?? result;
+  return doc ? normalizeJob(doc as any) : null;
 }

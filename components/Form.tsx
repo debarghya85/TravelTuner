@@ -12,7 +12,7 @@ export default function Form() {
     setLoading(true);
 
     try {
-      const res = await fetch("/api/itinerary-jobs/start", {
+      const res = await fetch("/api/itinerary-jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

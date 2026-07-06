@@ -163,7 +163,7 @@ export default function GenerateItineraryPage() {
         budget: Number(form.budget),
       };
 
-      const response = await fetch("/api/itinerary-jobs/start", {
+      const response = await fetch("/api/itinerary-jobs", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

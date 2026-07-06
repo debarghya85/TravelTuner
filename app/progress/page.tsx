@@ -98,15 +98,14 @@ export default function ProgressPage() {
         if (cancelled) return;
 
         const statusProgress: Record<string, number> = {
-          queued: 27,
+          pending: 27,
           processing: 48,
-          saving: 82,
-          done: 100,
+          completed: 100,
           failed: 100,
         };
 
         if (job?.status) {
-          const terminal = job.status === "done" || job.status === "failed";
+          const terminal = job.status === "completed" || job.status === "failed";
           terminalRef.current = terminal;
           setIsTerminal(terminal);
           setProgress((current) =>
@@ -127,7 +126,7 @@ export default function ProgressPage() {
           }
         }
 
-        if (job?.status === "done" && job?.output) {
+        if (job?.status === "completed" && job?.output) {
           saveItinerary({ success: true, itinerary: job.output });
           window.sessionStorage.removeItem(JOB_KEY);
           terminalRef.current = true;

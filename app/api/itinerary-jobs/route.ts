@@ -17,15 +17,6 @@ export async function POST(req: Request) {
     input: body,
   });
 
-  const processUrl = new URL(`/api/itinerary-jobs/${job.id}/process`, req.url).toString();
-  queueMicrotask(() => {
-    void fetch(processUrl, {
-      method: "POST",
-    }).catch((error) => {
-      console.error("[jobs] failed to kick off itinerary processing", error);
-    });
-  });
-
   return NextResponse.json({
     success: true,
     jobId: job.id,

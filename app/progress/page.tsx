@@ -45,6 +45,7 @@ export default function ProgressPage() {
   const terminalRef = useRef(false);
   const completionTimerRef = useRef<number | null>(null);
   const progressRef = useRef(8);
+  const kickoffRef = useRef(false);
 
   useEffect(() => {
     const jobId = window.sessionStorage.getItem(JOB_KEY);
@@ -58,6 +59,7 @@ export default function ProgressPage() {
 
     terminalRef.current = false;
     progressRef.current = 8;
+    kickoffRef.current = false;
     if (redirectTimerRef.current) {
       window.clearTimeout(redirectTimerRef.current);
       redirectTimerRef.current = null;
@@ -83,6 +85,27 @@ export default function ProgressPage() {
         });
         scheduleVisualTick();
       }, delay);
+    };
+
+    const kickoffProcessing = async () => {
+      if (kickoffRef.current || terminalRef.current) {
+        return;
+      }
+
+      kickoffRef.current = true;
+
+      try {
+        const response = await fetch(`/api/itinerary-jobs/${jobId}/process`, {
+          method: "POST",
+        });
+
+        if (!response.ok && response.status !== 202) {
+          console.warn("[jobs] failed to start itinerary processing", response.status);
+        }
+      } catch (error) {
+        kickoffRef.current = false;
+        console.error("[jobs] failed to start itinerary processing", error);
+      }
     };
 
     const poll = async () => {
@@ -115,6 +138,10 @@ export default function ProgressPage() {
             progressRef.current,
             statusProgress[job.status] || 60,
           );
+        }
+
+        if (job?.status === "pending") {
+          void kickoffProcessing();
         }
 
         if (job?.stage) {

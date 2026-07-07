@@ -3,8 +3,11 @@ import { cookies } from "next/headers";
 
 export type AuthenticatedUser = {
   id: string;
-  countryCode: string;
-  mobile: string;
+  provider: "google" | "facebook" | "email" | "unknown";
+  providerId: string;
+  displayName?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
   createdAt?: string;
 };
 
@@ -17,26 +20,17 @@ function sign(value: string) {
   return crypto.createHmac("sha256", USER_SESSION_SECRET).update(value).digest("hex");
 }
 
-export function normalizeMobile(mobile: string) {
-  return mobile.replace(/[^\d]/g, "").slice(0, 15);
-}
-
-export function normalizeCountryCode(countryCode: string) {
-  const digits = countryCode.replace(/[^\d]/g, "");
-  return digits ? `+${digits}` : "+91";
-}
-
-export function createStableUserId(countryCode: string, mobile: string) {
+export function createStableUserId(provider: string, providerId: string) {
   return crypto
     .createHash("sha256")
-    .update(`${normalizeCountryCode(countryCode)}:${normalizeMobile(mobile)}`)
+    .update(`${provider}:${providerId}`)
     .digest("hex")
     .slice(0, 24);
 }
 
-export function createUserSessionToken(user: { id: string; mobile: string }) {
+export function createUserSessionToken(user: { id: string }) {
   const issuedAt = Date.now().toString();
-  const payload = `${user.id}:${user.mobile}:${issuedAt}`;
+  const payload = `${user.id}:${issuedAt}`;
   return `${payload}.${sign(payload)}`;
 }
 
@@ -57,8 +51,10 @@ export function parseUserSessionToken(token?: string | null) {
     return null;
   }
 
-  const [id, mobile, issuedAt] = payload.split(":");
-  if (!id || !mobile || !issuedAt) {
+  const parts = payload.split(":");
+  const id = parts[0];
+  const issuedAt = parts[parts.length - 1];
+  if (!id || !issuedAt) {
     return null;
   }
 
@@ -67,13 +63,19 @@ export function parseUserSessionToken(token?: string | null) {
     return null;
   }
 
-  return { id, mobile, issuedAt: Number(issuedAt) };
+  return { id, issuedAt: Number(issuedAt) };
 }
 
 export function getAuthenticatedUserFromRequest() {
   const token = cookies().get(USER_COOKIE_NAME)?.value;
   const session = parseUserSessionToken(token);
-  return session ? { id: session.id, mobile: session.mobile, countryCode: "+91" } : null;
+  return session
+    ? {
+        id: session.id,
+        provider: "unknown" as const,
+        providerId: session.id,
+      }
+    : null;
 }
 
 export function getUserCookieName() {

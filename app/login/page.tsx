@@ -1,78 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useMemo, useState } from "react";
 import {
   ArrowLeft,
-  ArrowRight,
   BadgeCheck,
-  CheckCircle2,
   Globe2,
+  UserRound,
   ShieldCheck,
   Sparkles,
-  Smartphone,
 } from "lucide-react";
 import { consumeLoginReturnPath } from "../../lib/login-redirect";
 
-const COUNTRY_CODES = ["+91", "+1", "+44", "+61", "+971", "+65", "+81"];
-
 export default function LoginPage() {
-  const router = useRouter();
-  const [countryCode, setCountryCode] = useState("+91");
-  const [mobile, setMobile] = useState("");
-  const [otp, setOtp] = useState("");
-  const [step, setStep] = useState<1 | 2>(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const digitsOnly = useMemo(
-    () => mobile.replace(/\D/g, "").slice(0, 15),
-    [mobile],
-  );
-
-  const sendOtp = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/auth/send-otp", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ countryCode, mobile: digitsOnly }),
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.message || "Failed to send OTP");
-      }
-      setStep(2);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to send OTP");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const verifyOtp = async () => {
-    setLoading(true);
-    setError("");
-    try {
-      const response = await fetch("/api/auth/verify-otp", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ countryCode, mobile: digitsOnly, otp }),
-      });
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.message || "OTP verification failed");
-      }
-      window.location.assign(consumeLoginReturnPath() || "/itineraries");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "OTP verification failed");
-    } finally {
-      setLoading(false);
-    }
-  };
+  const returnPath = consumeLoginReturnPath() || "/itineraries";
 
   return (
     <main className="login-shell scenic-shell">
@@ -98,73 +38,32 @@ export default function LoginPage() {
           </div>
 
           <p className="login-card-copy">
-            Use your mobile number to sign in and see every itinerary tied to
-            your account.
+            Sign in with your social account to keep your travel plans, saved
+            trips, and profile in one place.
           </p>
 
-          <div className="login-field-group">
-            <label>Mobile number</label>
-            <div className="phone-field">
-              <select
-                value={countryCode}
-                onChange={(e) => setCountryCode(e.target.value)}
-              >
-                {COUNTRY_CODES.map((code) => (
-                  <option key={code} value={code}>
-                    {code}
-                  </option>
-                ))}
-              </select>
-              <input
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={15}
-                value={mobile}
-                onChange={(e) =>
-                  setMobile(e.target.value.replace(/\D/g, "").slice(0, 15))
-                }
-                placeholder="98765 43210"
-              />
-            </div>
-          </div>
-
-          {step === 2 ? (
-            <div className="login-field-group">
-              <label>OTP</label>
-              <input
-                className="otp-input"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={6}
-                value={otp}
-                onChange={(e) =>
-                  setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-                }
-                placeholder="123456"
-              />
-            </div>
-          ) : null}
-
-          <button
-            className="login-primary-btn"
-            type="button"
-            onClick={step === 1 ? sendOtp : verifyOtp}
-            disabled={loading || !digitsOnly}
+          <Link
+            className="login-social-btn login-google-btn"
+            href={`/api/auth/start/google?returnTo=${encodeURIComponent(returnPath)}`}
           >
-            {loading
-              ? "Please wait..."
-              : step === 1
-                ? "Send OTP"
-                : "Verify & Login"}
-            <ArrowRight size={24} />
-          </button>
+            <img
+              src="/google-logo.svg"
+              alt="Google"
+              className="login-google-logo"
+              onError={(event) => {
+                if (event.currentTarget.dataset.fallbackApplied === "1") return;
+                event.currentTarget.dataset.fallbackApplied = "1";
+                event.currentTarget.src = "/google-logo-fallback.svg";
+              }}
+            />
+            <span className="login-social-text">Google</span>
+          </Link>
 
           <p className="login-footnote">
-            <CheckCircle2 size={16} />
-            We never share your number with anyone.
+            <ShieldCheck size={16} />
+            We only store your basic profile details from the provider you
+            choose.
           </p>
-
-          {error ? <p className="login-error">{error}</p> : null}
         </section>
 
         <div className="login-copy-content login-copy-content--mobile">
@@ -259,73 +158,31 @@ export default function LoginPage() {
         </div>
 
         <p className="login-card-copy">
-          Use your mobile number to sign in and see every itinerary tied to your
-          account.
+          Sign in with your social account to keep your travel plans, saved
+          trips, and profile in one place.
         </p>
 
-        <div className="login-field-group">
-          <label>Mobile number</label>
-          <div className="phone-field">
-            <select
-              value={countryCode}
-              onChange={(e) => setCountryCode(e.target.value)}
-            >
-              {COUNTRY_CODES.map((code) => (
-                <option key={code} value={code}>
-                  {code}
-                </option>
-              ))}
-            </select>
-            <input
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={15}
-              value={mobile}
-              onChange={(e) =>
-                setMobile(e.target.value.replace(/\D/g, "").slice(0, 15))
-              }
-              placeholder="98765 43210"
-            />
-          </div>
-        </div>
-
-        {step === 2 ? (
-          <div className="login-field-group">
-            <label>OTP</label>
-            <input
-              className="otp-input"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              maxLength={6}
-              value={otp}
-              onChange={(e) =>
-                setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))
-              }
-              placeholder="123456"
-            />
-          </div>
-        ) : null}
-
-        <button
-          className="login-primary-btn"
-          type="button"
-          onClick={step === 1 ? sendOtp : verifyOtp}
-          disabled={loading || !digitsOnly}
+        <Link
+          className="login-social-btn login-google-btn"
+          href={`/api/auth/start/google?returnTo=${encodeURIComponent(returnPath)}`}
         >
-          {loading
-            ? "Please wait..."
-            : step === 1
-              ? "Send OTP"
-              : "Verify & Login"}
-          <ArrowRight size={24} />
-        </button>
+          <img
+            src="/google-logo.svg"
+            alt="Google"
+            className="login-google-logo"
+            onError={(event) => {
+              if (event.currentTarget.dataset.fallbackApplied === "1") return;
+              event.currentTarget.dataset.fallbackApplied = "1";
+              event.currentTarget.src = "/google-logo-fallback.svg";
+            }}
+          />
+          <span className="login-social-text">Google</span>
+        </Link>
 
         <p className="login-footnote">
-          <CheckCircle2 size={16} />
-          We never share your number with anyone.
+          <ShieldCheck size={16} />
+          We only store your basic profile details from the provider you choose.
         </p>
-
-        {error ? <p className="login-error">{error}</p> : null}
       </section>
     </main>
   );

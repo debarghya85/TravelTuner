@@ -15,7 +15,6 @@ import {
   MapPin,
   Search,
   Settings,
-  Smartphone,
   Sparkles,
   UserRound,
 } from "lucide-react";
@@ -57,7 +56,45 @@ type ItineraryPreview = {
   };
 };
 
-type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
+type UserInfo = {
+  id: string;
+  provider: "google" | "facebook" | "email" | "unknown";
+  providerId: string;
+  displayName?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+} | null;
+
+function UserAvatar({
+  src,
+  alt,
+  className,
+  fallbackClassName,
+}: {
+  src?: string | null;
+  alt: string;
+  className: string;
+  fallbackClassName: string;
+}) {
+  const imageSrc = src || "/default-avatar.svg";
+  return (
+    <img
+      src={imageSrc}
+      alt={alt}
+      className={className}
+      referrerPolicy="no-referrer"
+      loading="eager"
+      decoding="async"
+      onError={(event) => {
+        const target = event.currentTarget;
+        if (target.dataset.fallbackApplied === "1") return;
+        target.dataset.fallbackApplied = "1";
+        target.src = "/default-avatar.svg";
+        target.className = `${className} ${fallbackClassName}`;
+      }}
+    />
+  );
+}
 
 type CardData = {
   id: string;
@@ -218,12 +255,19 @@ export default function ItineraryListPage() {
             >
               <div className="landing-mobile-menu-user-card">
                 <span className="landing-mobile-menu-user-avatar">
-                  <UserRound size={42} />
+                  <UserAvatar
+                    src={user?.photoURL}
+                    alt={user?.displayName || "User"}
+                    className="landing-mobile-menu-user-avatar-img"
+                    fallbackClassName="landing-mobile-menu-user-avatar-fallback"
+                  />
                 </span>
                 <div>
-                  <strong>User Information</strong>
+                  <strong>{user?.displayName || user?.email || "Traveler"}</strong>
                   <p>
-                    {user?.countryCode || "+91"} {user?.mobile || "---------"}
+                    {user?.provider === "unknown"
+                      ? "Logged in"
+                      : `Logged in with ${user?.provider || "account"}`}
                   </p>
                 </div>
               </div>
@@ -445,19 +489,28 @@ export default function ItineraryListPage() {
               onClick={() => setAccountOpen((v) => !v)}
             >
               <span className="account-pill-icon">
-                <Smartphone size={18} />
+                <UserAvatar
+                  src={user?.photoURL}
+                  alt={user?.displayName || "User"}
+                  className="account-pill-avatar"
+                  fallbackClassName="account-pill-avatar-fallback"
+                />
               </span>
-              <span className="account-pill-text">+91 89108 82091</span>
+              <span className="account-pill-text">
+                {user?.displayName || user?.email || "Traveler"}
+              </span>
               <ChevronDown size={18} />
             </button>
 
             {accountOpen ? (
               <div className="account-menu">
                 <p>Signed in with</p>
-                <strong>+91 89108 82091</strong>
+                <strong>{user?.displayName || user?.email || "Traveler"}</strong>
                 <span className="verified-row">
-                  <Smartphone size={16} />
-                  Verified via OTP
+                  <UserRound size={16} />
+                  {user?.provider === "unknown"
+                    ? "Logged in"
+                    : `Logged in with ${user.provider}`}
                 </span>
 
                 <button

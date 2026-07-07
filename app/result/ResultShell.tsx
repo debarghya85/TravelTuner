@@ -24,7 +24,14 @@ const navItems = [
   // { href: "/", label: "Profile", icon: UserRound },
 ];
 
-type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
+type UserInfo = {
+  id: string;
+  provider: "google" | "facebook" | "email" | "unknown";
+  providerId: string;
+  displayName?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+} | null;
 
 export function useStoredItinerary() {
   const [itinerary, setItinerary] = useState<Itinerary | null>(null);
@@ -257,12 +264,26 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
             >
               <div className="landing-mobile-menu-user-card">
                 <span className="landing-mobile-menu-user-avatar">
-                  <UserRound size={42} />
+                  <img
+                    src={user?.photoURL || "/default-avatar.svg"}
+                    alt={user?.displayName || "User"}
+                    referrerPolicy="no-referrer"
+                    loading="eager"
+                    decoding="async"
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      if (target.dataset.fallbackApplied === "1") return;
+                      target.dataset.fallbackApplied = "1";
+                      target.src = "/default-avatar.svg";
+                    }}
+                  />
                 </span>
                 <div>
-                  <strong>User Information</strong>
+                  <strong>{user?.displayName || user?.email || "Traveler"}</strong>
                   <p>
-                    {user?.countryCode || "+91"} {user?.mobile || "---------"}
+                    {user?.provider === "unknown"
+                      ? "Logged in"
+                      : `Logged in with ${user?.provider || "account"}`}
                   </p>
                 </div>
               </div>

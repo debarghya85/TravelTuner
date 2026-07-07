@@ -30,7 +30,45 @@ import {
 } from "lucide-react";
 import { setLoginReturnPath } from "../lib/login-redirect";
 
-type UserInfo = { id: string; mobile: string; countryCode?: string } | null;
+type UserInfo = {
+  id: string;
+  provider: "google" | "facebook" | "email" | "unknown";
+  providerId: string;
+  displayName?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+} | null;
+
+function UserAvatar({
+  src,
+  alt,
+  className,
+  fallbackClassName = "nav-avatar-fallback",
+}: {
+  src?: string | null;
+  alt: string;
+  className?: string;
+  fallbackClassName?: string;
+}) {
+  const imageSrc = src || "/default-avatar.svg";
+  return (
+    <img
+      src={imageSrc}
+      alt={alt}
+      className={className}
+      referrerPolicy="no-referrer"
+      loading="eager"
+      decoding="async"
+      onError={(event) => {
+        const target = event.currentTarget;
+        if (target.dataset.fallbackApplied === "1") return;
+        target.dataset.fallbackApplied = "1";
+        target.src = "/default-avatar.svg";
+        target.className = className ? `${className} ${fallbackClassName}` : fallbackClassName;
+      }}
+    />
+  );
+}
 
 const benefits = [
   {
@@ -197,15 +235,19 @@ export default function LandingPage() {
                   aria-haspopup="menu"
                 >
                   <span className="nav-avatar">
-                    <UserRound size={18} />
+                    <UserAvatar
+                      src={user.photoURL}
+                      alt={user.displayName || "User"}
+                      className="nav-avatar-img"
+                    />
                   </span>
                   <span className="nav-profile-copy">
                     <strong>
-                      {user.countryCode || "+91"} {user.mobile}
+                      {user.displayName || user.email || "Traveler"}
                     </strong>
                     <small>
                       <span className="status-dot" />
-                      Logged in
+                      {user.provider === "unknown" ? "Logged in" : `Logged in with ${user.provider}`}
                     </small>
                   </span>
                 </button>
@@ -215,8 +257,7 @@ export default function LandingPage() {
                     <div className="nav-profile-menu-head">
                       <span>Signed in with</span>
                       <strong>
-                        <Smartphone size={14} />
-                        {user.countryCode || "+91"} {user.mobile}
+                        {user.displayName || user.email || "Traveler"}
                       </strong>
                     </div>
 
@@ -295,12 +336,19 @@ export default function LandingPage() {
               <>
                 <div className="landing-mobile-menu-user-card">
                   <span className="landing-mobile-menu-user-avatar">
-                    <UserRound size={42} />
+                    <UserAvatar
+                      src={user.photoURL}
+                      alt={user.displayName || "User"}
+                      className="landing-mobile-menu-user-avatar-img"
+                      fallbackClassName="landing-mobile-menu-user-avatar-fallback"
+                    />
                   </span>
                   <div>
-                    <strong>User Information</strong>
+                    <strong>{user.displayName || user.email || "Traveler"}</strong>
                     <p>
-                      {user.countryCode || "+91"} {user.mobile}
+                      {user.provider === "unknown"
+                        ? "Logged in"
+                        : `Logged in with ${user.provider}`}
                     </p>
                   </div>
                 </div>
@@ -431,6 +479,12 @@ export default function LandingPage() {
           <img
             src="https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1400"
             alt="Travelers looking over a coastal Greek destination"
+            referrerPolicy="no-referrer"
+            loading="eager"
+            decoding="async"
+            onError={(event) => {
+              event.currentTarget.src = "/default-avatar.svg";
+            }}
           />
 
           <div className="trip-preview-card">

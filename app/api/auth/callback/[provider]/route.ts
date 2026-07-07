@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createUserSessionToken, getUserCookieName, getUserSessionCookieOptions } from "../../../../../lib/user-auth";
 import {
+  buildRedirectUri,
   getOAuthReturnToCookieName,
   getOAuthStateCookieName,
   getProviderLoginConfig,
@@ -39,7 +40,7 @@ export async function GET(req: Request, context: { params: { provider: string } 
   }
 
   try {
-    const redirectUri = `${url.origin}/api/auth/callback/${rawProvider}`;
+    const redirectUri = buildRedirectUri(url.origin, rawProvider);
     const tokenResponse = await fetch(config.tokenUrl, {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },

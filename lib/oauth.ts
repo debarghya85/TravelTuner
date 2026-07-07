@@ -45,6 +45,24 @@ export function createOAuthState() {
   return crypto.randomBytes(24).toString("hex");
 }
 
+function getAppOrigin(fallbackOrigin: string) {
+  const envOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.SITE_URL ||
+    process.env.URL ||
+    process.env.DEPLOY_PRIME_URL;
+
+  if (!envOrigin) {
+    return fallbackOrigin;
+  }
+
+  try {
+    return new URL(envOrigin).origin;
+  } catch {
+    return fallbackOrigin;
+  }
+}
+
 export function getProviderLoginConfig(provider: OAuthProvider) {
   if (provider === "google") {
     return {
@@ -68,5 +86,5 @@ export function getProviderLoginConfig(provider: OAuthProvider) {
 }
 
 export function buildRedirectUri(origin: string, provider: OAuthProvider) {
-  return `${origin}/api/auth/callback/${provider}`;
+  return `${getAppOrigin(origin)}/api/auth/callback/${provider}`;
 }

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createUserSessionToken, getUserCookieName, getUserSessionCookieOptions } from "../../../../../lib/user-auth";
 import {
   buildRedirectUri,
+  getAppOrigin,
   getOAuthReturnToCookieName,
   getOAuthStateCookieName,
   getProviderLoginConfig,
@@ -99,7 +100,7 @@ export async function GET(req: Request, context: { params: { provider: string } 
 
     const user = await upsertUserByOAuthProfile(profile);
     const returnTo = normalizeReturnTo(cookies().get(getOAuthReturnToCookieName())?.value);
-    const response = NextResponse.redirect(new URL(returnTo, req.url));
+    const response = NextResponse.redirect(new URL(returnTo, getAppOrigin(url.origin)));
     response.cookies.set(getUserCookieName(), createUserSessionToken({ id: user.id }), getUserSessionCookieOptions());
     response.cookies.set(getOAuthStateCookieName(), "", { path: "/", maxAge: 0 });
     response.cookies.set(getOAuthReturnToCookieName(), "", { path: "/", maxAge: 0 });

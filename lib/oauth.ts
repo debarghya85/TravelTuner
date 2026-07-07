@@ -45,7 +45,7 @@ export function createOAuthState() {
   return crypto.randomBytes(24).toString("hex");
 }
 
-function getAppOrigin(fallbackOrigin: string) {
+export function getAppOrigin(fallbackOrigin: string) {
   const envOrigin =
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.SITE_URL ||

@@ -152,3 +152,47 @@ export function travelerTotal(itinerary: Itinerary) {
 export function dayTitle(day: ItineraryDay, index: number) {
   return `${day.day || `Day ${index + 1}`} - ${day.title || "Planned Day"}`;
 }
+
+function extractDayNumber(value?: string) {
+  if (!value) {
+    return null;
+  }
+
+  const normalized = value.toLowerCase().trim();
+  const exactNumber = normalized.match(/^(\d+)$/);
+  if (exactNumber) {
+    return Number(exactNumber[1]);
+  }
+
+  const dayNumber = normalized.match(/\bday\s*(\d+)\b/);
+  return dayNumber ? Number(dayNumber[1]) : null;
+}
+
+export function matchesDayLabel(value: string | undefined, day: number) {
+  return extractDayNumber(value) === day;
+}
+
+export function uniqueLocalTransport<T extends { day?: string; mode?: string; title?: string; route?: string; details?: string; duration?: string; cost?: number; dailyCost?: number }>(
+  options: T[],
+) {
+  const seen = new Set<string>();
+
+  return options.filter((option) => {
+    const signature = [
+      option.day || "",
+      option.mode || "",
+      option.title || "",
+      option.route || "",
+      option.details || "",
+      option.duration || "",
+      option.cost ?? option.dailyCost ?? "",
+    ].join("|");
+
+    if (seen.has(signature)) {
+      return false;
+    }
+
+    seen.add(signature);
+    return true;
+  });
+}

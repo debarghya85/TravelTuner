@@ -13,7 +13,7 @@ import {
   Soup,
 } from "lucide-react";
 import { useParams } from "next/navigation";
-import { dayTitle, formatMoney } from "../../itinerary-data";
+import { dayTitle, formatMoney, matchesDayLabel } from "../../itinerary-data";
 import { EmptyItinerary, ResultFrame, useStoredItinerary } from "../../ResultShell";
 
 export default function DayDetailsPage() {
@@ -88,8 +88,7 @@ export default function DayDetailsPage() {
     ...(itinerary.travelOptions?.localTransport || []),
   ];
   const dayLocalTransport = localTransportOptions.find((option) => {
-    const transportDay = option.day?.toLowerCase() || "";
-    return transportDay.includes(`day ${index + 1}`) || transportDay === String(index + 1);
+    return matchesDayLabel(option.day, index + 1);
   }) || itinerary.travelOptions?.localTransport?.[0];
   const dayStayOption = itinerary.stayOptions?.find((stay) => {
     const stayText = `${stay.name || ""} ${stay.location || ""}`.toLowerCase();

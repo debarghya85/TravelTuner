@@ -10,6 +10,7 @@ import {
   ResultFrame,
   useStoredItinerary,
 } from "../ResultShell";
+import { matchesDayLabel, uniqueLocalTransport } from "../itinerary-data";
 
 function TravelOptionCard({
   option,
@@ -137,17 +138,16 @@ function TravelOptionsContent() {
     ...(itinerary.travelOptions?.localTransport || []),
   ];
   const dayLocalOptions = selectedDay
-    ? allLocalOptions.filter((option) => {
-        const dayValue = option.day?.toLowerCase() || "";
-        return dayValue.includes(`day ${selectedDay}`) || dayValue === String(selectedDay);
-      })
+    ? uniqueLocalTransport(
+        allLocalOptions.filter((option) => matchesDayLabel(option.day, selectedDay)),
+      )
     : [];
   const displayedLocalOptions = selectedDay
     ? dayLocalOptions.length
       ? dayLocalOptions
       : selectedDayData?.localTransport?.length
-        ? selectedDayData.localTransport
-        : itinerary.travelOptions?.localTransport || []
+        ? uniqueLocalTransport(selectedDayData.localTransport)
+        : uniqueLocalTransport(itinerary.travelOptions?.localTransport || [])
     : allLocalOptions;
   const title = selectedDay ? `Day ${selectedDay} Transport` : "Travel Options";
   const subtitle = selectedDay

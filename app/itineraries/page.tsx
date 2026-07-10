@@ -13,12 +13,11 @@ import {
   Home,
   LogOut,
   MapPin,
+  Trophy,
   Search,
   Settings,
   Sparkles,
   UserRound,
-  Crown,
-  Eye,
 } from "lucide-react";
 import { setLoginReturnPath } from "../../lib/login-redirect";
 
@@ -581,13 +580,9 @@ export default function ItineraryListPage() {
                     }}
                   />
                   <div
-                    className={`itinerary-plan-pill overlay ${card.planId === "premium" ? "is-premium" : "is-view-only"}`}
+                    className={`itinerary-plan-pill overlay ${card.planId === "premium" ? "is-gold" : "is-silver"}`}
                   >
-                    {card.planId === "premium" ? (
-                      <Crown size={14} />
-                    ) : (
-                      <Eye size={14} />
-                    )}
+                    <Trophy size={16} />
                   </div>
                 </div>
 

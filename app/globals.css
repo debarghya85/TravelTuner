@@ -6984,23 +6984,30 @@ input[type="range"]::-moz-range-thumb {
   top: 18px;
   right: 18px;
   z-index: 2;
-  min-height: 34px;
-  padding: 0 14px;
-  box-shadow: 0 10px 24px rgba(21, 55, 120, 0.12);
+  min-height: 40px;
+  min-width: 40px;
+  padding: 0 10px;
+  box-shadow: 0 14px 30px rgba(21, 55, 120, 0.16);
 }
 
-.itinerary-plan-pill.is-premium {
-  color: #1f4fe0;
-  background: rgba(232, 240, 255, 0.96);
+.itinerary-plan-pill.is-gold {
+  color: #9a6b00;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(145deg, #fff4c7 0%, #f6cf53 28%, #d89b06 62%, #fff0ad 100%);
+  border: 1px solid rgba(255, 217, 97, 0.82);
 }
 
-.itinerary-plan-pill.is-view-only {
-  color: #516080;
-  background: rgba(238, 243, 251, 0.96);
+.itinerary-plan-pill.is-silver {
+  color: #717479;
+  background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / 95%), rgba(255, 255, 255, 0) 38%), linear-gradient(145deg, #6b6b6a7d 0%, #d6d6d6 28%, #a5a5a591 62%, #181818 100%);
+  border: 1px solid rgb(64 64 64 / 82%);
 }
+
 
 .itinerary-plan-pill svg {
   flex: 0 0 auto;
+  filter: drop-shadow(0 1px 1px rgba(255, 255, 255, 0.45));
 }
 
 .result-plan-pill {
@@ -7010,23 +7017,34 @@ input[type="range"]::-moz-range-thumb {
   align-items: center;
   gap: 8px;
   width: fit-content;
-  min-height: 34px;
+  min-height: 40px;
   margin: 0 0 14px;
-  padding: 0 14px;
+  padding: 0 12px;
   border-radius: 999px;
   font-size: 14px;
   font-weight: 800;
-  box-shadow: 0 10px 24px rgba(21, 55, 120, 0.08);
+  box-shadow: 0 14px 30px rgba(21, 55, 120, 0.12);
 }
 
-.result-plan-pill.is-premium {
-  color: #1f4fe0;
-  background: rgba(232, 240, 255, 0.96);
+.result-plan-pill.hero-badge {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  margin: 0;
 }
 
-.result-plan-pill.is-view-only {
-  color: #516080;
-  background: rgba(238, 243, 251, 0.96);
+.result-plan-pill.is-gold {
+  color: #9a6b00;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0) 38%),
+    linear-gradient(145deg, #fff4c7 0%, #f6cf53 28%, #d89b06 62%, #fff0ad 100%);
+  border: 1px solid rgba(255, 217, 97, 0.82);
+}
+
+.result-plan-pill.is-silver {
+  color: #717479;
+  background: radial-gradient(circle at 30% 30%, rgb(255 255 255 / 95%), rgba(255, 255, 255, 0) 38%), linear-gradient(145deg, #6b6b6a7d 0%, #d6d6d6 28%, #a5a5a591 62%, #181818 100%);
+  border: 1px solid rgb(64 64 64 / 82%);
 }
 
 .result-plan-pill-icon {

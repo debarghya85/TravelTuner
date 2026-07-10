@@ -11,6 +11,7 @@ import {
   Share2,
   Download,
   UserRound,
+  Trophy,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Itinerary, readStoredItineraryContext } from "./itinerary-data";
@@ -174,7 +175,9 @@ export function ResultFrame({
   const [user, setUser] = useState<UserInfo>(null);
   const storedContext = readStoredItineraryContext();
   const itinerary = storedContext?.itinerary || null;
-  const isPremiumPlan = (planId || storedContext?.planId) === "premium";
+  const resolvedPlanId =
+    planId ?? storedContext?.planId ?? itinerary?.planId ?? "view-only";
+  const isPremiumPlan = resolvedPlanId === "premium";
 
   useEffect(() => {
     const loadUser = async () => {
@@ -488,8 +491,8 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
             </>
           ) : (
             <div className="result-plan-lock">
-              <strong>View only plan</strong>
-              <span>Share and PDF download are available in Premium.</span>
+              Upgrade to <strong>Gold plan </strong>
+              <span>to share your itinerary and download it as a PDF.</span>
             </div>
           )}
           <Link href="/generate-itinerary" className="primary-action">
@@ -558,8 +561,8 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
             </>
           ) : (
             <div className="result-plan-lock mobile">
-              <strong>View only plan</strong>
-              <span>Share and PDF download are available in Premium.</span>
+              <strong>Silver plan</strong>
+              <span>Gold unlocks share and PDF download.</span>
             </div>
           )}
           <Link href="/generate-itinerary" className="primary-action">

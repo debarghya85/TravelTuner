@@ -121,8 +121,8 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Basic Plan", price: "9" },
-  { name: "Premium Plan", price: "49" },
+  { name: "Silver", price: "9" },
+  { name: "Gold", price: "49" },
 ];
 
 const pricingFeatures = [

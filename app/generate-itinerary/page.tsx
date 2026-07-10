@@ -14,6 +14,7 @@ import {
   Wallet,
 } from "lucide-react";
 import { setLoginReturnPath } from "../../lib/login-redirect";
+import { openRazorpayCheckout } from "../../lib/razorpay-client";
 
 const JOB_KEY = "travel-tuner:last-job-id";
 
@@ -29,6 +30,7 @@ type TripForm = {
   destination: string;
   days: string;
   budget: number;
+  planId: "view-only" | "premium";
   travelStyle: string;
   adults: number;
   children: number;
@@ -38,6 +40,7 @@ type TripForm = {
 export default function GenerateItineraryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [imageIndex, setImageIndex] = useState(0);
   const [adultInfo, setAdultInfo] = useState("");
   const [childrenInfo, setChildrenInfo] = useState("");
@@ -48,6 +51,7 @@ export default function GenerateItineraryPage() {
     destination: "",
     days: "",
     budget: 50000,
+    planId: "premium",
     travelStyle: "",
     adults: 1,
     children: 0,
@@ -163,7 +167,7 @@ export default function GenerateItineraryPage() {
         budget: Number(form.budget),
       };
 
-      const response = await fetch("/api/itinerary-jobs", {
+      const response = await fetch("/api/payment/create-order", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -193,15 +197,69 @@ export default function GenerateItineraryPage() {
         throw new Error("Failed to start itinerary generation");
       }
 
-      if (data.jobId) {
-        window.sessionStorage.setItem(JOB_KEY, String(data.jobId));
+      if (data.requestId) {
+        window.sessionStorage.setItem("travel-tuner:last-request-id", String(data.requestId));
       }
-      router.push("/progress");
+
+      setCheckoutLoading(true);
+      const opened = await openRazorpayCheckout({
+        key: String(data.key_id || data.checkout?.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || ""),
+        amount: Number(data.amount || data.checkout?.amount || 0),
+        currency: String(data.currency || data.checkout?.currency || "INR"),
+        order_id: String(data.order_id || data.checkout?.order_id || ""),
+        name: "Travel Tuner",
+        description:
+          form.planId === "premium"
+            ? "Premium itinerary plan"
+            : "View itinerary plan",
+        image: "/tt_logo.png",
+        prefill: {},
+        theme: {
+          color: "#ff6a00",
+        },
+        handler: async (response) => {
+          const verifyResponse = await fetch("/api/payment/verify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              method: "upi",
+            }),
+          });
+
+          if (!verifyResponse.ok) {
+            const errorData = await verifyResponse.json().catch(() => ({}));
+            throw new Error(errorData?.message || "Payment verification failed");
+          }
+
+          const verifyData = await verifyResponse.json();
+          if (verifyData?.jobId) {
+            window.sessionStorage.setItem("travel-tuner:last-job-id", String(verifyData.jobId));
+          }
+          router.push("/progress");
+        },
+        modal: {
+          ondismiss: () => {
+            setCheckoutLoading(false);
+          },
+        },
+      });
+
+      if (!opened) {
+        throw new Error("Failed to open Razorpay checkout");
+      }
+
+      setCheckoutLoading(false);
     } catch (error) {
       console.error(error);
       alert(error instanceof Error ? error.message : "Something went wrong!");
     } finally {
       setLoading(false);
+      setCheckoutLoading(false);
     }
   };
 
@@ -383,13 +441,46 @@ export default function GenerateItineraryPage() {
                 />
               </label>
 
+              <div className="plan-selector">
+                <span className="field-label">Choose a plan</span>
+                <div className="plan-selector-grid">
+                  {[
+                    {
+                      id: "view-only",
+                      title: "₹9 View Only",
+                      copy: "Generate and view your itinerary",
+                    },
+                    {
+                      id: "premium",
+                      title: "₹49 Premium",
+                      copy: "Unlock download, share, and export",
+                    },
+                  ].map((plan) => (
+                    <button
+                      key={plan.id}
+                      type="button"
+                      className={`plan-card ${form.planId === plan.id ? "selected" : ""}`}
+                      onClick={() =>
+                        setForm((current) => ({
+                          ...current,
+                          planId: plan.id as "view-only" | "premium",
+                        }))
+                      }
+                    >
+                      <strong>{plan.title}</strong>
+                      <span>{plan.copy}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <button
                 className="submit-itinerary"
                 type="submit"
-                disabled={loading}
+                disabled={loading || checkoutLoading}
               >
                 <Sparkles size={18} />
-                {loading ? "Generating..." : "Generate Itinerary"}
+                {loading || checkoutLoading ? "Opening Checkout..." : "Generate Itinerary"}
               </button>
             </form>
           </div>

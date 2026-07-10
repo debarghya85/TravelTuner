@@ -86,6 +86,14 @@ export async function createItineraryJob(data: {
   });
 }
 
+export async function findItineraryJobByPaymentOrderId(paymentOrderId: string) {
+  const db = await connectDB();
+  const record = await db.collection(COLLECTION_NAME).findOne({
+    "input.paymentOrderId": paymentOrderId,
+  });
+  return record ? normalizeJob(record as any) : null;
+}
+
 export async function getItineraryJobById(jobId: string) {
   const db = await connectDB();
   const record = await db.collection(COLLECTION_NAME).findOne({ _id: new ObjectId(jobId) });

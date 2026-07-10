@@ -3,6 +3,7 @@ import { callAI } from "./ai";
 import { saveItineraryRecord } from "./itinerary-store";
 import { claimItineraryJobForProcessing, getItineraryJobById, updateItineraryJob } from "./itinerary-jobs";
 import { buildPrompt } from "../utils/buildPrompt";
+import { getPaymentOrderById } from "./payments";
 
 export async function processItineraryJob(jobId: string) {
   const job = await claimItineraryJobForProcessing(jobId);
@@ -14,6 +15,13 @@ export async function processItineraryJob(jobId: string) {
 
   try {
     const latestJob = (await getItineraryJobById(jobId)) || job;
+    const paymentOrderId = String((latestJob.input as any)?.paymentOrderId || "");
+    const paymentOrder = paymentOrderId ? await getPaymentOrderById(paymentOrderId) : null;
+
+    if (!paymentOrder || paymentOrder.status !== "verified") {
+      throw new Error("Payment verification required before AI generation");
+    }
+
     const prompt = buildPrompt(latestJob.input);
     const aiResponse = await callAI(prompt, Number(latestJob.input.days));
     const coverImageUrl = buildCoverImageUrl(aiResponse.coverImagePrompt);

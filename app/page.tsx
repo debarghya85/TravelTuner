@@ -64,7 +64,9 @@ function UserAvatar({
         if (target.dataset.fallbackApplied === "1") return;
         target.dataset.fallbackApplied = "1";
         target.src = "/default-avatar.svg";
-        target.className = className ? `${className} ${fallbackClassName}` : fallbackClassName;
+        target.className = className
+          ? `${className} ${fallbackClassName}`
+          : fallbackClassName;
       }}
     />
   );
@@ -157,11 +159,6 @@ const pricingFeatures = [
   },
   { icon: Share2, name: "Share Itinerary", availability: [false, true] },
   { icon: Download, name: "Download as PDF", availability: [false, true] },
-  {
-    icon: Edit3,
-    name: "Re-generate / Edit Itinerary",
-    availability: [false, true],
-  },
 ];
 
 export default function LandingPage() {
@@ -247,7 +244,9 @@ export default function LandingPage() {
                     </strong>
                     <small>
                       <span className="status-dot" />
-                      {user.provider === "unknown" ? "Logged in" : `Logged in with ${user.provider}`}
+                      {user.provider === "unknown"
+                        ? "Logged in"
+                        : `Logged in with ${user.provider}`}
                     </small>
                   </span>
                 </button>
@@ -344,7 +343,9 @@ export default function LandingPage() {
                     />
                   </span>
                   <div>
-                    <strong>{user.displayName || user.email || "Traveler"}</strong>
+                    <strong>
+                      {user.displayName || user.email || "Traveler"}
+                    </strong>
                     <p>
                       {user.provider === "unknown"
                         ? "Logged in"
@@ -353,7 +354,10 @@ export default function LandingPage() {
                   </div>
                 </div>
 
-                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>
+                <a
+                  href="#how-it-works"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <span className="landing-mobile-menu-item-icon">
                     <Bell size={18} />
                   </span>
@@ -393,7 +397,10 @@ export default function LandingPage() {
               </>
             ) : (
               <>
-                <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)}>
+                <a
+                  href="#how-it-works"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <span className="landing-mobile-menu-item-icon">
                     <Bell size={18} />
                   </span>

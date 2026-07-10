@@ -55,7 +55,9 @@ export function useStoredItinerary() {
 
         const data = await response.json();
         const job = data?.job;
-        const planId = (job?.input?.planId || "view-only") as "view-only" | "premium";
+        const planId = (job?.input?.planId || "view-only") as
+          | "view-only"
+          | "premium";
         return job?.output
           ? {
               ...job.output,
@@ -69,7 +71,12 @@ export function useStoredItinerary() {
           const resolvedItinerary = await resolveFromJob(jobId);
           if (resolvedItinerary) {
             setItinerary(resolvedItinerary);
-            saveResolvedItinerary((resolvedItinerary.planId || "view-only") as "view-only" | "premium", resolvedItinerary);
+            saveResolvedItinerary(
+              (resolvedItinerary.planId || "view-only") as
+                | "view-only"
+                | "premium",
+              resolvedItinerary,
+            );
             setReady(true);
             return;
           }
@@ -80,11 +87,15 @@ export function useStoredItinerary() {
 
       if (requestId) {
         try {
-          const requestResponse = await fetch(`/api/itinerary-requests/${requestId}`);
+          const requestResponse = await fetch(
+            `/api/itinerary-requests/${requestId}`,
+          );
           if (requestResponse.ok) {
             const requestData = await requestResponse.json();
             const resolvedJob = requestData?.job;
-            const planId = (requestData?.paymentOrder?.planId || requestData?.request?.planId || "view-only") as "view-only" | "premium";
+            const planId = (requestData?.paymentOrder?.planId ||
+              requestData?.request?.planId ||
+              "view-only") as "view-only" | "premium";
             const resolvedItinerary = resolvedJob?.output
               ? {
                   ...resolvedJob.output,
@@ -100,7 +111,10 @@ export function useStoredItinerary() {
             }
           }
         } catch (error) {
-          console.error("[result] failed to load itinerary from request", error);
+          console.error(
+            "[result] failed to load itinerary from request",
+            error,
+          );
         }
       }
 
@@ -120,7 +134,10 @@ export function useStoredItinerary() {
   return { itinerary, ready };
 }
 
-function saveResolvedItinerary(planId: "view-only" | "premium", itinerary: Itinerary) {
+function saveResolvedItinerary(
+  planId: "view-only" | "premium",
+  itinerary: Itinerary,
+) {
   if (typeof window === "undefined") {
     return;
   }
@@ -376,7 +393,9 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                   />
                 </span>
                 <div>
-                  <strong>{user?.displayName || user?.email || "Traveler"}</strong>
+                  <strong>
+                    {user?.displayName || user?.email || "Traveler"}
+                  </strong>
                   <p>
                     {user?.provider === "unknown"
                       ? "Logged in"
@@ -459,7 +478,11 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
               >
                 Share on WhatsApp
               </button>
-              <button className="pdf-action" type="button" onClick={downloadPdf}>
+              <button
+                className="pdf-action"
+                type="button"
+                onClick={downloadPdf}
+              >
                 Download as PDF
               </button>
             </>
@@ -524,7 +547,11 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                 <Share2 size={18} />
                 <span>Share on WhatsApp</span>
               </button>
-              <button className="pdf-action" type="button" onClick={downloadPdf}>
+              <button
+                className="pdf-action"
+                type="button"
+                onClick={downloadPdf}
+              >
                 <Download size={18} />
                 <span>Download as PDF</span>
               </button>

@@ -17,12 +17,17 @@ import {
   Settings,
   Sparkles,
   UserRound,
+  Crown,
+  Eye,
 } from "lucide-react";
 import { setLoginReturnPath } from "../../lib/login-redirect";
 
 type ItineraryRecord = {
   id: string;
   createdAt: string;
+  input?: {
+    planId?: "view-only" | "premium";
+  };
   output: {
     itinerary?: {
       destination?: string;
@@ -47,6 +52,7 @@ type ItineraryPreview = {
   coverImagePrompt?: string;
   coverImageUrl?: string;
   summary?: string;
+  planId?: "view-only" | "premium";
   days?: { day?: string; title?: string }[];
   totalEstimatedCost?: number;
   travelerInfo?: {
@@ -103,6 +109,7 @@ type CardData = {
   title: string;
   tagline: string;
   subtitle: string;
+  planId: "view-only" | "premium";
   daysCount: number;
   adults: number;
   children: number;
@@ -172,6 +179,9 @@ export default function ItineraryListPage() {
         const children = itinerary.travelerInfo?.children ?? 0;
         const totalEstimatedCost = itinerary.totalEstimatedCost ?? 126000;
         const status = "";
+        const planId = (item.input?.planId ||
+          itinerary.planId ||
+          "view-only") as "view-only" | "premium";
 
         return {
           id: item.id,
@@ -183,6 +193,7 @@ export default function ItineraryListPage() {
             itinerary.summary ||
             itinerary.travelerInfo?.pricingCalculatedFor ||
             "Saved itinerary",
+          planId,
           daysCount,
           adults,
           children,
@@ -263,7 +274,9 @@ export default function ItineraryListPage() {
                   />
                 </span>
                 <div>
-                  <strong>{user?.displayName || user?.email || "Traveler"}</strong>
+                  <strong>
+                    {user?.displayName || user?.email || "Traveler"}
+                  </strong>
                   <p>
                     {user?.provider === "unknown"
                       ? "Logged in"
@@ -505,7 +518,9 @@ export default function ItineraryListPage() {
             {accountOpen ? (
               <div className="account-menu">
                 <p>Signed in with</p>
-                <strong>{user?.displayName || user?.email || "Traveler"}</strong>
+                <strong>
+                  {user?.displayName || user?.email || "Traveler"}
+                </strong>
                 <span className="verified-row">
                   <UserRound size={16} />
                   {user?.provider === "unknown"
@@ -565,6 +580,15 @@ export default function ItineraryListPage() {
                       event.currentTarget.src = "/itinery_result.png";
                     }}
                   />
+                  <div
+                    className={`itinerary-plan-pill overlay ${card.planId === "premium" ? "is-premium" : "is-view-only"}`}
+                  >
+                    {card.planId === "premium" ? (
+                      <Crown size={14} />
+                    ) : (
+                      <Eye size={14} />
+                    )}
+                  </div>
                 </div>
 
                 <div className="itinerary-card-body">

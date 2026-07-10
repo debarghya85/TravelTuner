@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -10,20 +10,14 @@ import {
   Plane,
   Plus,
   Sparkles,
+  Star,
+  Check,
+  Lock,
   Users,
   Wallet,
 } from "lucide-react";
 import { setLoginReturnPath } from "../../lib/login-redirect";
 import { openRazorpayCheckout } from "../../lib/razorpay-client";
-
-const JOB_KEY = "travel-tuner:last-job-id";
-
-const travelImages = [
-  "https://images.pexels.com/photos/338515/pexels-photo-338515.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  "https://images.pexels.com/photos/356844/pexels-photo-356844.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1200",
-  "https://images.pexels.com/photos/460672/pexels-photo-460672.jpeg?auto=compress&cs=tinysrgb&w=1200",
-];
 
 type TripForm = {
   source: string;
@@ -41,11 +35,8 @@ export default function GenerateItineraryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
-  const [imageIndex, setImageIndex] = useState(0);
   const [adultInfo, setAdultInfo] = useState("");
   const [childrenInfo, setChildrenInfo] = useState("");
-  const [isMobile, setIsMobile] = useState(false);
-  const [isTablet, setIsTablet] = useState(false);
   const [form, setForm] = useState<TripForm>({
     source: "",
     destination: "",
@@ -57,30 +48,6 @@ export default function GenerateItineraryPage() {
     children: 0,
     preferences: "",
   });
-
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      setIsMobile(width < 768);
-      setIsTablet(width >= 768 && width < 1180);
-    };
-
-    handleResize();
-    window.addEventListener("resize", handleResize);
-
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      setImageIndex((current) => (current + 1) % travelImages.length);
-    }, 2500);
-
-    return () => window.clearInterval(interval);
-  }, []);
-
-  const getImg = (offset: number) =>
-    travelImages[(imageIndex + offset) % travelImages.length];
 
   const handleBack = () => {
     router.push("/");
@@ -198,12 +165,20 @@ export default function GenerateItineraryPage() {
       }
 
       if (data.requestId) {
-        window.sessionStorage.setItem("travel-tuner:last-request-id", String(data.requestId));
+        window.sessionStorage.setItem(
+          "travel-tuner:last-request-id",
+          String(data.requestId),
+        );
       }
 
       setCheckoutLoading(true);
       const opened = await openRazorpayCheckout({
-        key: String(data.key_id || data.checkout?.key_id || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID || ""),
+        key: String(
+          data.key_id ||
+            data.checkout?.key_id ||
+            process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ||
+            "",
+        ),
         amount: Number(data.amount || data.checkout?.amount || 0),
         currency: String(data.currency || data.checkout?.currency || "INR"),
         order_id: String(data.order_id || data.checkout?.order_id || ""),
@@ -212,7 +187,6 @@ export default function GenerateItineraryPage() {
           form.planId === "premium"
             ? "Premium itinerary plan"
             : "View itinerary plan",
-        image: "/tt_logo.png",
         prefill: {},
         theme: {
           color: "#ff6a00",
@@ -233,12 +207,17 @@ export default function GenerateItineraryPage() {
 
           if (!verifyResponse.ok) {
             const errorData = await verifyResponse.json().catch(() => ({}));
-            throw new Error(errorData?.message || "Payment verification failed");
+            throw new Error(
+              errorData?.message || "Payment verification failed",
+            );
           }
 
           const verifyData = await verifyResponse.json();
           if (verifyData?.jobId) {
-            window.sessionStorage.setItem("travel-tuner:last-job-id", String(verifyData.jobId));
+            window.sessionStorage.setItem(
+              "travel-tuner:last-job-id",
+              String(verifyData.jobId),
+            );
           }
           router.push("/progress");
         },
@@ -265,6 +244,7 @@ export default function GenerateItineraryPage() {
 
   return (
     <main className="generator-page">
+      <div className="generator-page-bg" aria-hidden="true" />
       <section className="generator-shell">
         <div className="generator-layout">
           <div className="mobile-generator-top">
@@ -276,9 +256,8 @@ export default function GenerateItineraryPage() {
             >
               <ArrowLeft size={20} />
             </button>
-            <div className="mobile-brand-lockup">
-              <img src="/tt_logo.png" alt="Travel Tuner" />
-              <span>AI TRIP PLANNER</span>
+            <div className="mobile-brand-lockup" aria-hidden="true">
+              <img src="/tt_logo.png" alt="" />
             </div>
           </div>
 
@@ -447,13 +426,25 @@ export default function GenerateItineraryPage() {
                   {[
                     {
                       id: "view-only",
-                      title: "₹9 View Only",
+                      price: "₹9",
+                      title: "View Only",
                       copy: "Generate and view your itinerary",
+                      features: [
+                        "AI Generated Itinerary",
+                        "Day-wise Plan",
+                        "Online Viewing",
+                      ],
                     },
                     {
                       id: "premium",
-                      title: "₹49 Premium",
+                      price: "₹49",
+                      title: "Premium",
                       copy: "Unlock download, share, and export",
+                      features: [
+                        "Everything in View Only",
+                        "Download PDF",
+                        "Share with Friends",
+                      ],
                     },
                   ].map((plan) => (
                     <button
@@ -467,8 +458,57 @@ export default function GenerateItineraryPage() {
                         }))
                       }
                     >
-                      <strong>{plan.title}</strong>
-                      <span>{plan.copy}</span>
+                      <div className="plan-card-top">
+                        <span className="plan-radio" aria-hidden="true">
+                          <span />
+                        </span>
+                        <div className="plan-heading">
+                          <strong>{plan.price}</strong>
+                          <span>{plan.title}</span>
+                        </div>
+                        {plan.id === "premium" ? (
+                          <span className="plan-badge">
+                            <Star size={14} fill="currentColor" />
+                            MOST POPULAR
+                          </span>
+                        ) : null}
+                      </div>
+
+                      <p className="plan-copy">{plan.copy}</p>
+
+                      <div className="plan-divider" aria-hidden="true" />
+
+                      <div className="plan-features" aria-hidden="true">
+                        {plan.features.map((feature) => (
+                          <div key={feature}>
+                            <Check size={16} />
+                            <span className="plan-card-span-imp">
+                              {feature}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div
+                        className={`plan-action ${form.planId === plan.id ? "is-selected" : ""}`}
+                      >
+                        {form.planId === plan.id ? (
+                          <>
+                            <Check size={16} />
+                            Selected
+                          </>
+                        ) : plan.id === "premium" ? (
+                          <>
+                            <Lock size={16} />
+                            Choose Plan
+                          </>
+                        ) : (
+                          <>
+                            <Check size={16} />
+                            Choose Plan
+                          </>
+                        )}
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -480,24 +520,17 @@ export default function GenerateItineraryPage() {
                 disabled={loading || checkoutLoading}
               >
                 <Sparkles size={18} />
-                {loading || checkoutLoading ? "Opening Checkout..." : "Generate Itinerary"}
+                {loading || checkoutLoading
+                  ? "Opening Checkout..."
+                  : "Generate Itinerary"}
               </button>
+
+              <p className="secure-note">
+                <Lock size={14} />
+                Secure payments. Cancel anytime.
+              </p>
             </form>
           </div>
-
-          {!isMobile ? (
-            <div
-              className={`generator-gallery ${
-                isTablet ? "generator-gallery-tablet" : ""
-              }`}
-            >
-              {[0, 1, 2, 3].map((offset) => (
-                <div className="gallery-photo" key={offset}>
-                  <img src={getImg(offset)} alt="" />
-                </div>
-              ))}
-            </div>
-          ) : null}
         </div>
       </section>
     </main>

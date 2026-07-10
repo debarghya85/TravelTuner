@@ -10,6 +10,7 @@ export default function SavedResultPage({ params }: { params: { id: string } }) 
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [found, setFound] = useState(false);
+  const [planId, setPlanId] = useState<"view-only" | "premium" | null>(null);
 
   useEffect(() => {
       const load = async () => {
@@ -25,11 +26,15 @@ export default function SavedResultPage({ params }: { params: { id: string } }) 
         }
 
       const data = await response.json();
+      const resolvedPlanId = (data.planId || data.itinerary?.planId || "view-only") as
+        | "view-only"
+        | "premium";
       saveItinerary({
         success: true,
-        planId: data.planId || data.itinerary?.planId || "view-only",
+        planId: resolvedPlanId,
         itinerary: data.itinerary || {},
       });
+      setPlanId(resolvedPlanId);
       setFound(true);
       setLoading(false);
     };
@@ -49,5 +54,5 @@ export default function SavedResultPage({ params }: { params: { id: string } }) 
     return <EmptyItinerary />;
   }
 
-  return <ResultPage />;
+  return <ResultPage planId={planId} />;
 }

@@ -19,7 +19,7 @@ import {
 import { dayTitle, formatMoney, travelerTotal } from "./itinerary-data";
 import { EmptyItinerary, ResultFrame, useStoredItinerary } from "./ResultShell";
 
-export default function ResultPage() {
+export default function ResultPage({ planId }: { planId?: "view-only" | "premium" | null }) {
   const { itinerary, ready } = useStoredItinerary();
 
   if (!ready) {
@@ -39,7 +39,7 @@ export default function ResultPage() {
   const heroImage = itinerary.coverImageUrl || "/itinery_result.png";
 
   return (
-    <ResultFrame planId={itinerary?.planId || null}>
+    <ResultFrame planId={planId || itinerary?.planId || null}>
       <section className="result-hero">
         <img
           className="result-hero-image"

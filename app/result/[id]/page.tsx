@@ -25,7 +25,11 @@ export default function SavedResultPage({ params }: { params: { id: string } }) 
         }
 
       const data = await response.json();
-      saveItinerary(data.itinerary);
+      saveItinerary({
+        success: true,
+        planId: data.planId || data.itinerary?.planId || "view-only",
+        itinerary: data.itinerary || {},
+      });
       setFound(true);
       setLoading(false);
     };

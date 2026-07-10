@@ -33,6 +33,9 @@ type PaymentOrder = {
   planId: string;
   gatewayOrderId?: string;
   gatewayPaymentId?: string | null;
+  refundId?: string | null;
+  refundStatus?: string | null;
+  refundProcessedAt?: string | null;
 };
 
 type Variant =
@@ -80,11 +83,13 @@ const planCopy: Record<
 };
 
 function moneyLabel(amount: number, currency = "INR") {
+  const rupees = (amount || 0) / 100;
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency,
-    maximumFractionDigits: 0,
-  }).format(amount || 0);
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(rupees);
 }
 
 function Header({
@@ -512,6 +517,31 @@ function TerminalScreen({
   );
 }
 
+function TrackingInfo({ order }: { order: PaymentOrder | null }) {
+  return (
+    <div className="info-table">
+      <div>
+        <span>Order ID</span>
+        <strong>{order?.gatewayOrderId || `order_${order?.id || "demo"}`}</strong>
+      </div>
+      <div>
+        <span>Payment ID</span>
+        <strong>{order?.gatewayPaymentId || `pay_${order?.id || "demo"}`}</strong>
+      </div>
+      <div>
+        <span>Refund ID</span>
+        <strong>{order?.refundId || "Processing..."}</strong>
+      </div>
+      <div>
+        <span>Refund Status</span>
+        <strong className={order?.refundStatus === "processed" ? "status-success" : ""}>
+          {order?.refundStatus || "pending"}
+        </strong>
+      </div>
+    </div>
+  );
+}
+
 function ReadyScreen({ order }: { order: PaymentOrder | null }) {
   return (
     <main className="popup-page">
@@ -639,6 +669,30 @@ function DetailsPage({ order }: { order: PaymentOrder | null }) {
   );
 }
 
+function RefundScreen({ order }: { order: PaymentOrder | null }) {
+  return (
+    <main className="popup-page">
+      <div className="popup-frame success-panel">
+        <Header closeHref={`/payment/${order?.id || "demo"}`} />
+        <div className="success-icon">
+          <CheckCircle2 size={78} />
+        </div>
+        <h2>Refund Requested</h2>
+        <p className="success-amount">
+          {moneyLabel(order?.amount || 9, order?.currency || "INR")} refund is in progress
+        </p>
+        <p>
+          We have initiated the refund and sent it to Razorpay for processing.
+        </p>
+        <TrackingInfo order={order} />
+        <div className="notice-box">
+          Keep these ids for support tracking. Refunds usually reflect in 5-7 business days.
+        </div>
+      </div>
+    </main>
+  );
+}
+
 export function PaymentFlow({
   variant,
   order,
@@ -688,13 +742,7 @@ export function PaymentFlow({
       />
     );
   if (variant === "refund")
-    return (
-      <TerminalScreen
-        title="Refund Successful"
-        body="₹9 has been refunded successfully."
-        ctaPrimary="Close"
-      />
-    );
+    return <RefundScreen order={order} />;
   if (variant === "details") return <DetailsPage order={order} />;
   return <PaymentPlanDesktop order={order} plan={plan} />;
 }

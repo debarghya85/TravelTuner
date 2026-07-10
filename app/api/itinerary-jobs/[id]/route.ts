@@ -23,6 +23,7 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
       status: job.status,
       stage: job.stage,
       error: job.error,
+      paymentOrderId: String((job.input as any)?.paymentOrderId || ""),
       createdAt: job.createdAt,
       updatedAt: job.updatedAt,
       output: job.output,

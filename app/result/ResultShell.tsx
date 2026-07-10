@@ -13,7 +13,7 @@ import {
   UserRound,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Itinerary, readItinerary } from "./itinerary-data";
+import { Itinerary, readStoredItineraryContext } from "./itinerary-data";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -38,11 +38,102 @@ export function useStoredItinerary() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setItinerary(readItinerary());
-    setReady(true);
+    const load = async () => {
+      const stored = readStoredItineraryContext();
+      const jobId =
+        window.sessionStorage.getItem("travel-tuner:last-job-id") ||
+        window.localStorage.getItem("travel-tuner:last-job-id");
+      const requestId =
+        window.sessionStorage.getItem("travel-tuner:last-request-id") ||
+        window.localStorage.getItem("travel-tuner:last-request-id");
+
+      const resolveFromJob = async (resolvedJobId: string) => {
+        const response = await fetch(`/api/itinerary-jobs/${resolvedJobId}`);
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = await response.json();
+        const job = data?.job;
+        const planId = (job?.input?.planId || "view-only") as "view-only" | "premium";
+        return job?.output
+          ? {
+              ...job.output,
+              planId,
+            }
+          : null;
+      };
+
+      if (jobId) {
+        try {
+          const resolvedItinerary = await resolveFromJob(jobId);
+          if (resolvedItinerary) {
+            setItinerary(resolvedItinerary);
+            saveResolvedItinerary((resolvedItinerary.planId || "view-only") as "view-only" | "premium", resolvedItinerary);
+            setReady(true);
+            return;
+          }
+        } catch (error) {
+          console.error("[result] failed to load itinerary from job", error);
+        }
+      }
+
+      if (requestId) {
+        try {
+          const requestResponse = await fetch(`/api/itinerary-requests/${requestId}`);
+          if (requestResponse.ok) {
+            const requestData = await requestResponse.json();
+            const resolvedJob = requestData?.job;
+            const planId = (requestData?.paymentOrder?.planId || requestData?.request?.planId || "view-only") as "view-only" | "premium";
+            const resolvedItinerary = resolvedJob?.output
+              ? {
+                  ...resolvedJob.output,
+                  planId,
+                }
+              : null;
+
+            if (resolvedItinerary) {
+              setItinerary(resolvedItinerary);
+              saveResolvedItinerary(planId, resolvedItinerary);
+              setReady(true);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error("[result] failed to load itinerary from request", error);
+        }
+      }
+
+      if (!jobId && stored?.itinerary) {
+        setItinerary(stored.itinerary);
+        setReady(true);
+        return;
+      }
+
+      setItinerary(stored?.itinerary || null);
+      setReady(true);
+    };
+
+    void load();
   }, []);
 
   return { itinerary, ready };
+}
+
+function saveResolvedItinerary(planId: "view-only" | "premium", itinerary: Itinerary) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload = JSON.stringify({
+    success: true,
+    planId,
+    itinerary,
+    savedAt: Date.now(),
+  });
+
+  window.sessionStorage.setItem("travel-tuner:last-itinerary", payload);
+  window.localStorage.setItem("travel-tuner:last-itinerary:local", payload);
 }
 
 export function ResultFrame({
@@ -51,17 +142,22 @@ export function ResultFrame({
   subtitle,
   backHref,
   aside,
+  planId,
 }: {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
   backHref?: string;
   aside?: React.ReactNode;
+  planId?: "view-only" | "premium" | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<UserInfo>(null);
+  const storedContext = readStoredItineraryContext();
+  const itinerary = storedContext?.itinerary || null;
+  const isPremiumPlan = (planId || storedContext?.planId) === "premium";
 
   useEffect(() => {
     const loadUser = async () => {
@@ -76,9 +172,8 @@ export function ResultFrame({
   }, []);
 
   const shareOnWhatsApp = () => {
-    const itinerary = readItinerary();
-
     if (!itinerary) return;
+    if (!isPremiumPlan) return;
 
     const formatMoney = (amount?: number) =>
       amount ? `₹${amount.toLocaleString("en-IN")}` : "N/A";
@@ -205,9 +300,11 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
   };
 
   const downloadPdf = () => {
-    const itinerary = readItinerary();
-
     if (!itinerary) {
+      return;
+    }
+
+    if (!isPremiumPlan) {
       return;
     }
 
@@ -353,16 +450,25 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
         </nav>
 
         <div className="result-sidebar-actions">
-          <button
-            className="whatsapp-action"
-            type="button"
-            onClick={shareOnWhatsApp}
-          >
-            Share on WhatsApp
-          </button>
-          <button className="pdf-action" type="button" onClick={downloadPdf}>
-            Download as PDF
-          </button>
+          {isPremiumPlan ? (
+            <>
+              <button
+                className="whatsapp-action"
+                type="button"
+                onClick={shareOnWhatsApp}
+              >
+                Share on WhatsApp
+              </button>
+              <button className="pdf-action" type="button" onClick={downloadPdf}>
+                Download as PDF
+              </button>
+            </>
+          ) : (
+            <div className="result-plan-lock">
+              <strong>View only plan</strong>
+              <span>Share and PDF download are available in Premium.</span>
+            </div>
+          )}
           <Link href="/generate-itinerary" className="primary-action">
             Plan Another Trip
           </Link>
@@ -408,18 +514,27 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
         </div>
 
         <div className="result-mobile-actions">
-          <button
-            className="whatsapp-action"
-            type="button"
-            onClick={shareOnWhatsApp}
-          >
-            <Share2 size={18} />
-            <span>Share on WhatsApp</span>
-          </button>
-          <button className="pdf-action" type="button" onClick={downloadPdf}>
-            <Download size={18} />
-            <span>Download as PDF</span>
-          </button>
+          {isPremiumPlan ? (
+            <>
+              <button
+                className="whatsapp-action"
+                type="button"
+                onClick={shareOnWhatsApp}
+              >
+                <Share2 size={18} />
+                <span>Share on WhatsApp</span>
+              </button>
+              <button className="pdf-action" type="button" onClick={downloadPdf}>
+                <Download size={18} />
+                <span>Download as PDF</span>
+              </button>
+            </>
+          ) : (
+            <div className="result-plan-lock mobile">
+              <strong>View only plan</strong>
+              <span>Share and PDF download are available in Premium.</span>
+            </div>
+          )}
           <Link href="/generate-itinerary" className="primary-action">
             <BriefcaseBusiness size={18} />
             Plan Another Trip

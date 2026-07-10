@@ -202,6 +202,12 @@ export async function getItineraryRequestByPaymentOrderId(paymentOrderId: string
   return doc ? normalizeItineraryRequest(doc as any) : null;
 }
 
+export async function getItineraryRequestById(requestId: string) {
+  const db = await connectDB();
+  const doc = await db.collection("itinerary_requests").findOne({ _id: new ObjectId(requestId) });
+  return doc ? normalizeItineraryRequest(doc as any) : null;
+}
+
 export async function markPaymentVerified(params: {
   orderId: string;
   gatewayPaymentId: string;
@@ -360,6 +366,46 @@ export async function markPaymentRefunded(params: {
   );
 
   return normalizePaymentOrder(order as any);
+}
+
+export async function requestRazorpayRefund(params: {
+  gatewayPaymentId: string;
+  amount?: number;
+  speed?: "normal" | "optimum";
+  notes?: Record<string, string>;
+}) {
+  const { keyId, keySecret } = getRazorpayCredentials();
+  if (!keyId || !keySecret) {
+    throw new Error("Razorpay credentials are not configured");
+  }
+
+  const authorization = Buffer.from(`${keyId}:${keySecret}`).toString("base64");
+  const response = await fetch(`https://api.razorpay.com/v1/payments/${params.gatewayPaymentId}/refund`, {
+    method: "POST",
+    headers: {
+      Authorization: `Basic ${authorization}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      amount: typeof params.amount === "number" ? params.amount : undefined,
+      speed: params.speed || "normal",
+      notes: params.notes || {},
+    }),
+  });
+
+  if (!response.ok) {
+    const text = await response.text().catch(() => "");
+    throw new Error(`Failed to create Razorpay refund: ${response.status} ${text}`.trim());
+  }
+
+  const data = await response.json();
+  return {
+    id: String(data.id || ""),
+    paymentId: String(data.payment_id || params.gatewayPaymentId),
+    status: String(data.status || "processed"),
+    amount: Number(data.amount || params.amount || 0),
+    raw: data,
+  };
 }
 
 export async function getWebhookEventById(provider: "razorpay", eventId: string) {

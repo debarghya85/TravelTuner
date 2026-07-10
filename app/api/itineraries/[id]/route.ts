@@ -15,6 +15,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   return NextResponse.json({
     success: true,
-    itinerary: itinerary.output.itinerary || itinerary.output,
+    planId: itinerary.input?.planId || null,
+    itinerary: {
+      ...((itinerary.output.itinerary || itinerary.output) as Record<string, unknown>),
+      planId: itinerary.input?.planId || null,
+    },
   });
 }

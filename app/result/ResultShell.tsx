@@ -6,14 +6,16 @@ import {
   ArrowLeft,
   BriefcaseBusiness,
   CalendarDays,
+  Crown,
   Home,
   MapPin,
   Share2,
   Download,
   UserRound,
+  Trophy,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Itinerary, readItinerary } from "./itinerary-data";
+import { Itinerary, readStoredItineraryContext } from "./itinerary-data";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -38,11 +40,119 @@ export function useStoredItinerary() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    setItinerary(readItinerary());
-    setReady(true);
+    const load = async () => {
+      const stored = readStoredItineraryContext();
+      const jobId =
+        window.sessionStorage.getItem("travel-tuner:last-job-id") ||
+        window.localStorage.getItem("travel-tuner:last-job-id");
+      const requestId =
+        window.sessionStorage.getItem("travel-tuner:last-request-id") ||
+        window.localStorage.getItem("travel-tuner:last-request-id");
+
+      const resolveFromJob = async (resolvedJobId: string) => {
+        const response = await fetch(`/api/itinerary-jobs/${resolvedJobId}`);
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = await response.json();
+        const job = data?.job;
+        const planId = (job?.input?.planId || "view-only") as
+          | "view-only"
+          | "premium";
+        return job?.output
+          ? {
+              ...job.output,
+              planId,
+            }
+          : null;
+      };
+
+      if (jobId) {
+        try {
+          const resolvedItinerary = await resolveFromJob(jobId);
+          if (resolvedItinerary) {
+            setItinerary(resolvedItinerary);
+            saveResolvedItinerary(
+              (resolvedItinerary.planId || "view-only") as
+                | "view-only"
+                | "premium",
+              resolvedItinerary,
+            );
+            setReady(true);
+            return;
+          }
+        } catch (error) {
+          console.error("[result] failed to load itinerary from job", error);
+        }
+      }
+
+      if (requestId) {
+        try {
+          const requestResponse = await fetch(
+            `/api/itinerary-requests/${requestId}`,
+          );
+          if (requestResponse.ok) {
+            const requestData = await requestResponse.json();
+            const resolvedJob = requestData?.job;
+            const planId = (requestData?.paymentOrder?.planId ||
+              requestData?.request?.planId ||
+              "view-only") as "view-only" | "premium";
+            const resolvedItinerary = resolvedJob?.output
+              ? {
+                  ...resolvedJob.output,
+                  planId,
+                }
+              : null;
+
+            if (resolvedItinerary) {
+              setItinerary(resolvedItinerary);
+              saveResolvedItinerary(planId, resolvedItinerary);
+              setReady(true);
+              return;
+            }
+          }
+        } catch (error) {
+          console.error(
+            "[result] failed to load itinerary from request",
+            error,
+          );
+        }
+      }
+
+      if (!jobId && stored?.itinerary) {
+        setItinerary(stored.itinerary);
+        setReady(true);
+        return;
+      }
+
+      setItinerary(stored?.itinerary || null);
+      setReady(true);
+    };
+
+    void load();
   }, []);
 
   return { itinerary, ready };
+}
+
+function saveResolvedItinerary(
+  planId: "view-only" | "premium",
+  itinerary: Itinerary,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload = JSON.stringify({
+    success: true,
+    planId,
+    itinerary,
+    savedAt: Date.now(),
+  });
+
+  window.sessionStorage.setItem("travel-tuner:last-itinerary", payload);
+  window.localStorage.setItem("travel-tuner:last-itinerary:local", payload);
 }
 
 export function ResultFrame({
@@ -51,17 +161,24 @@ export function ResultFrame({
   subtitle,
   backHref,
   aside,
+  planId,
 }: {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
   backHref?: string;
   aside?: React.ReactNode;
+  planId?: "view-only" | "premium" | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [user, setUser] = useState<UserInfo>(null);
+  const storedContext = readStoredItineraryContext();
+  const itinerary = storedContext?.itinerary || null;
+  const resolvedPlanId =
+    planId ?? storedContext?.planId ?? itinerary?.planId ?? "view-only";
+  const isPremiumPlan = resolvedPlanId === "premium";
 
   useEffect(() => {
     const loadUser = async () => {
@@ -76,9 +193,8 @@ export function ResultFrame({
   }, []);
 
   const shareOnWhatsApp = () => {
-    const itinerary = readItinerary();
-
     if (!itinerary) return;
+    if (!isPremiumPlan) return;
 
     const formatMoney = (amount?: number) =>
       amount ? `₹${amount.toLocaleString("en-IN")}` : "N/A";
@@ -205,9 +321,11 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
   };
 
   const downloadPdf = () => {
-    const itinerary = readItinerary();
-
     if (!itinerary) {
+      return;
+    }
+
+    if (!isPremiumPlan) {
       return;
     }
 
@@ -279,7 +397,9 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                   />
                 </span>
                 <div>
-                  <strong>{user?.displayName || user?.email || "Traveler"}</strong>
+                  <strong>
+                    {user?.displayName || user?.email || "Traveler"}
+                  </strong>
                   <p>
                     {user?.provider === "unknown"
                       ? "Logged in"
@@ -353,23 +473,36 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
         </nav>
 
         <div className="result-sidebar-actions">
-          <button
-            className="whatsapp-action"
-            type="button"
-            onClick={shareOnWhatsApp}
-          >
-            Share on WhatsApp
-          </button>
-          <button className="pdf-action" type="button" onClick={downloadPdf}>
-            Download as PDF
-          </button>
+          {isPremiumPlan ? (
+            <>
+              <button
+                className="whatsapp-action"
+                type="button"
+                onClick={shareOnWhatsApp}
+              >
+                Share on WhatsApp
+              </button>
+              <button
+                className="pdf-action"
+                type="button"
+                onClick={downloadPdf}
+              >
+                Download as PDF
+              </button>
+            </>
+          ) : (
+            <div className="result-plan-lock">
+              Upgrade to <strong>Gold plan </strong>
+              <span>to share your itinerary and download it as a PDF.</span>
+            </div>
+          )}
           <Link href="/generate-itinerary" className="primary-action">
             Plan Another Trip
           </Link>
         </div>
       </aside>
 
-      <section className="result-stage">
+      <section className={`result-stage ${isPremiumPlan ? "is-premium" : "is-silver"}`}>
         {(title || backHref) && (
           <header className="result-topbar">
             {backHref ? (
@@ -407,23 +540,70 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
           ) : null}
         </div>
 
-        <div className="result-mobile-actions">
-          <button
-            className="whatsapp-action"
-            type="button"
-            onClick={shareOnWhatsApp}
-          >
-            <Share2 size={18} />
-            <span>Share on WhatsApp</span>
-          </button>
-          <button className="pdf-action" type="button" onClick={downloadPdf}>
-            <Download size={18} />
-            <span>Download as PDF</span>
-          </button>
-          <Link href="/generate-itinerary" className="primary-action">
-            <BriefcaseBusiness size={18} />
-            Plan Another Trip
-          </Link>
+        <div
+          className={`result-mobile-actions ${isPremiumPlan ? "is-premium" : "is-silver"}`}
+        >
+          {isPremiumPlan ? (
+            <>
+              <button
+                className="whatsapp-action"
+                type="button"
+                onClick={shareOnWhatsApp}
+              >
+                <Share2 size={18} />
+                <span>Share</span>
+              </button>
+              <button
+                className="pdf-action"
+                type="button"
+                onClick={downloadPdf}
+              >
+                <Download size={18} />
+                <span>Download</span>
+              </button>
+              <Link href="/generate-itinerary" className="primary-action">
+                <MapPin size={18} />
+                <span>Plan Trip</span>
+              </Link>
+            </>
+          ) : (
+            <div className="result-mobile-upgrade-grid">
+              <div className="result-upgrade-card gold">
+                <div className="result-upgrade-card-head">
+                  <span className="result-upgrade-icon gold" aria-hidden="true">
+                    <Crown size={28} />
+                  </span>
+                  <div>
+                    <strong>Gold Upgrade</strong>
+                    <p>Unlock Share &amp; PDF</p>
+                    <p>Download and more.</p>
+                  </div>
+                </div>
+                <Link href="/generate-itinerary" className="result-upgrade-cta gold">
+                  <Crown size={18} />
+                  <span>Upgrade to Gold</span>
+                </Link>
+              </div>
+
+              <div className="result-upgrade-card blue">
+                <div className="result-upgrade-card-head">
+                  <span className="result-upgrade-icon blue" aria-hidden="true">
+                    <MapPin size={28} />
+                  </span>
+                  <div>
+                    <strong>Plan Trip</strong>
+                    <p>Customize your itinerary</p>
+                    <p>and preferences.</p>
+                  </div>
+                </div>
+                <Link href="/generate-itinerary" className="result-upgrade-cta blue">
+                  <MapPin size={18} />
+                  <span>Plan Trip</span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
       </section>
     </main>

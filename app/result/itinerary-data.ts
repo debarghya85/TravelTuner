@@ -72,6 +72,7 @@ export type FoodOption = {
 };
 
 export type Itinerary = {
+  planId?: "view-only" | "premium";
   summary?: string;
   destination?: string;
   coverImageUrl?: string;
@@ -102,13 +103,60 @@ export type Itinerary = {
   tips?: string[];
 };
 
+export type StoredItineraryPayload = {
+  success?: boolean;
+  planId?: "view-only" | "premium" | null;
+  savedAt?: number;
+  itinerary?: Itinerary;
+};
+
+export type StoredItineraryContext = {
+  planId: "view-only" | "premium";
+  itinerary: Itinerary;
+};
+
 export function normalizeItinerary(payload: unknown): Itinerary | null {
   if (!payload || typeof payload !== "object") {
     return null;
   }
 
-  const wrapped = payload as { itinerary?: Itinerary };
+  const wrapped = payload as StoredItineraryPayload & Itinerary;
   return wrapped.itinerary || (payload as Itinerary);
+}
+
+export function readStoredItineraryContext(): StoredItineraryContext | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const candidates = [
+    window.sessionStorage.getItem(ITINERARY_STORAGE_KEY),
+    window.localStorage.getItem(ITINERARY_LOCAL_STORAGE_KEY),
+  ].filter(Boolean) as string[];
+
+  if (!candidates.length) {
+    return null;
+  }
+
+  try {
+    const parsedItems = candidates
+      .map((raw) => JSON.parse(raw) as StoredItineraryPayload & Itinerary)
+      .sort((a, b) => Number(b.savedAt || 0) - Number(a.savedAt || 0));
+
+    const parsed = parsedItems[0];
+    const itinerary = parsed.itinerary || parsed;
+    const planId = (parsed.planId || itinerary.planId || "view-only") as "view-only" | "premium";
+
+    return {
+      planId,
+      itinerary: {
+        ...itinerary,
+        planId,
+      },
+    };
+  } catch {
+    return null;
+  }
 }
 
 export function saveItinerary(payload: unknown) {
@@ -116,28 +164,17 @@ export function saveItinerary(payload: unknown) {
     return;
   }
 
-  window.sessionStorage.setItem(ITINERARY_STORAGE_KEY, JSON.stringify(payload));
-  window.localStorage.setItem(ITINERARY_LOCAL_STORAGE_KEY, JSON.stringify(payload));
+  const serialized = JSON.stringify({
+    ...(payload && typeof payload === "object" ? (payload as Record<string, unknown>) : {}),
+    savedAt: Date.now(),
+  });
+
+  window.sessionStorage.setItem(ITINERARY_STORAGE_KEY, serialized);
+  window.localStorage.setItem(ITINERARY_LOCAL_STORAGE_KEY, serialized);
 }
 
 export function readItinerary(): Itinerary | null {
-  if (typeof window === "undefined") {
-    return null;
-  }
-
-  const raw =
-    window.sessionStorage.getItem(ITINERARY_STORAGE_KEY) ||
-    window.localStorage.getItem(ITINERARY_LOCAL_STORAGE_KEY);
-
-  if (!raw) {
-    return null;
-  }
-
-  try {
-    return normalizeItinerary(JSON.parse(raw));
-  } catch {
-    return null;
-  }
+  return readStoredItineraryContext()?.itinerary || null;
 }
 
 export function formatMoney(value?: number) {

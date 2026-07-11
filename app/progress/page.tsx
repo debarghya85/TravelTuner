@@ -154,7 +154,11 @@ export default function ProgressPage() {
         }
 
         if (job?.status === "completed" && job?.output) {
-          saveItinerary({ success: true, itinerary: job.output });
+          saveItinerary({
+            success: true,
+            planId: String((job as any)?.input?.planId || "view-only"),
+            itinerary: job.output,
+          });
           window.sessionStorage.removeItem(JOB_KEY);
           terminalRef.current = true;
           setIsTerminal(true);
@@ -182,9 +186,30 @@ export default function ProgressPage() {
         }
 
         if (job?.status === "failed") {
+          const paymentOrderId = String(job?.paymentOrderId || "");
+          if (paymentOrderId) {
+            try {
+              const paymentResponse = await fetch(`/api/payments/orders/${paymentOrderId}`);
+              if (paymentResponse.ok) {
+                const paymentData = await paymentResponse.json();
+                const paymentOrder = paymentData?.order;
+                if (paymentOrder?.status === "refunded") {
+                  window.sessionStorage.removeItem(JOB_KEY);
+                  router.replace(`/payment/${paymentOrderId}/refund`);
+                  return;
+                }
+              }
+            } catch (error) {
+              console.error("[jobs] failed to read payment refund status", error);
+            }
+          }
+
           window.sessionStorage.removeItem(JOB_KEY);
           terminalRef.current = true;
           setIsTerminal(true);
+          if (paymentOrderId) {
+            router.replace(`/payment/${paymentOrderId}/ai-failed`);
+          }
           return;
         }
       } catch (error) {

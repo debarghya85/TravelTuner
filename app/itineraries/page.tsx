@@ -13,6 +13,7 @@ import {
   Home,
   LogOut,
   MapPin,
+  Trophy,
   Search,
   Settings,
   Sparkles,
@@ -23,6 +24,9 @@ import { setLoginReturnPath } from "../../lib/login-redirect";
 type ItineraryRecord = {
   id: string;
   createdAt: string;
+  input?: {
+    planId?: "view-only" | "premium";
+  };
   output: {
     itinerary?: {
       destination?: string;
@@ -47,6 +51,7 @@ type ItineraryPreview = {
   coverImagePrompt?: string;
   coverImageUrl?: string;
   summary?: string;
+  planId?: "view-only" | "premium";
   days?: { day?: string; title?: string }[];
   totalEstimatedCost?: number;
   travelerInfo?: {
@@ -103,6 +108,7 @@ type CardData = {
   title: string;
   tagline: string;
   subtitle: string;
+  planId: "view-only" | "premium";
   daysCount: number;
   adults: number;
   children: number;
@@ -172,6 +178,9 @@ export default function ItineraryListPage() {
         const children = itinerary.travelerInfo?.children ?? 0;
         const totalEstimatedCost = itinerary.totalEstimatedCost ?? 126000;
         const status = "";
+        const planId = (item.input?.planId ||
+          itinerary.planId ||
+          "view-only") as "view-only" | "premium";
 
         return {
           id: item.id,
@@ -183,6 +192,7 @@ export default function ItineraryListPage() {
             itinerary.summary ||
             itinerary.travelerInfo?.pricingCalculatedFor ||
             "Saved itinerary",
+          planId,
           daysCount,
           adults,
           children,
@@ -263,7 +273,9 @@ export default function ItineraryListPage() {
                   />
                 </span>
                 <div>
-                  <strong>{user?.displayName || user?.email || "Traveler"}</strong>
+                  <strong>
+                    {user?.displayName || user?.email || "Traveler"}
+                  </strong>
                   <p>
                     {user?.provider === "unknown"
                       ? "Logged in"
@@ -308,7 +320,7 @@ export default function ItineraryListPage() {
                   <span className="landing-mobile-menu-item-icon">
                     <Sparkles size={18} />
                   </span>
-                  <strong>Create New Travel Plan</strong>
+                  <strong>Plan Another Trip</strong>
                   <span className="landing-mobile-menu-link-arrow">›</span>
                 </button>
               </div>
@@ -343,9 +355,13 @@ export default function ItineraryListPage() {
           >
             <span>
               <span className="itineraries-mobile-cta-icon">
-                <span>+</span>
+                <MapPin
+                  size={20}
+                  strokeWidth={2.6}
+                  className="itineraries-mobile-cta-icon-svg"
+                />
               </span>
-              <strong>Create New Travel Plan</strong>
+              <strong>Plan Another Trip</strong>
             </span>
             <ArrowRight size={28} />
           </button>
@@ -410,7 +426,8 @@ export default function ItineraryListPage() {
                 type="button"
                 onClick={handleCreateTravelPlan}
               >
-                Create your first travel plan
+                <MapPin size={16} />
+                <span>Create your first travel plan</span>
               </button>
             </div>
           ) : null}
@@ -467,7 +484,8 @@ export default function ItineraryListPage() {
             className="premium-button"
             onClick={handleCreateTravelPlan}
           >
-            Create New Travel Plan
+            <MapPin size={16} />
+            <span>Plan Another Trip</span>
           </button>
         </div>
       </aside>
@@ -505,7 +523,9 @@ export default function ItineraryListPage() {
             {accountOpen ? (
               <div className="account-menu">
                 <p>Signed in with</p>
-                <strong>{user?.displayName || user?.email || "Traveler"}</strong>
+                <strong>
+                  {user?.displayName || user?.email || "Traveler"}
+                </strong>
                 <span className="verified-row">
                   <UserRound size={16} />
                   {user?.provider === "unknown"
@@ -565,6 +585,11 @@ export default function ItineraryListPage() {
                       event.currentTarget.src = "/itinery_result.png";
                     }}
                   />
+                  <div
+                    className={`itinerary-plan-pill overlay ${card.planId === "premium" ? "is-gold" : "is-silver"}`}
+                  >
+                    <Trophy size={16} />
+                  </div>
                 </div>
 
                 <div className="itinerary-card-body">
@@ -612,7 +637,8 @@ export default function ItineraryListPage() {
                 type="button"
                 onClick={handleCreateTravelPlan}
               >
-                Create your first travel plan
+                <MapPin size={16} />
+                <span>Create your first travel plan</span>
               </button>
             </div>
           ) : null}

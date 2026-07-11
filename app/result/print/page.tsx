@@ -57,6 +57,7 @@ function PrintPageHeader({ destination }: { destination?: string }) {
 
 function PrintContent() {
   const { itinerary, ready } = useStoredItinerary();
+  const isPremiumPlan = itinerary?.planId === "premium";
 
   useEffect(() => {
     if (!ready || !itinerary) {
@@ -82,6 +83,20 @@ function PrintContent() {
 
   if (!itinerary) {
     return <EmptyItinerary />;
+  }
+
+  if (!isPremiumPlan) {
+    return (
+      <main className="pdf-page">
+        <div className="pdf-restricted">
+          <PrintPageHeader destination={itinerary.destination} />
+          <section className="pdf-restricted-card">
+            <h1>PDF download is locked</h1>
+            <p>Share and PDF export are available only on the Premium plan.</p>
+          </section>
+        </div>
+      </main>
+    );
   }
 
   const days = itinerary.days || [];
@@ -132,7 +147,6 @@ function PrintContent() {
             <div><span>Adults</span><strong>{itinerary.travelerInfo?.adults || 0}</strong></div>
             <div><span>Children</span><strong>{itinerary.travelerInfo?.children || 0}</strong></div>
             <div><span>Total Travelers</span><strong>{travelerTotal(itinerary)}</strong></div>
-            <div><span>Pricing For</span><strong>{itinerary.travelerInfo?.pricingCalculatedFor || "Group"}</strong></div>
           </div>
         </PrintSection>
 

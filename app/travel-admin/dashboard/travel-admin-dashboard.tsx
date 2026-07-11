@@ -3,7 +3,16 @@
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, CalendarDays, ChevronRight, Eye, Home, LogOut, Sparkles, UserRound } from "lucide-react";
+import {
+  ArrowLeft,
+  CalendarDays,
+  ChevronRight,
+  Eye,
+  Home,
+  LogOut,
+  Sparkles,
+  UserRound,
+} from "lucide-react";
 
 type RecordItem = {
   id: string;
@@ -63,13 +72,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
   return Boolean(value) && typeof value === "object" && !Array.isArray(value);
 }
 
-function RenderValue({
-  label,
-  value,
-}: {
-  label: string;
-  value: unknown;
-}) {
+function RenderValue({ label, value }: { label: string; value: unknown }) {
   if (Array.isArray(value)) {
     return (
       <details className="admin-collapse" open={false}>
@@ -79,28 +82,32 @@ function RenderValue({
             value.map((entry, index) => (
               <div className="admin-item-card" key={`${label}-${index}`}>
                 <div className="admin-item-title">
-                  {toText(isObject(entry) ? entry.day : undefined) || `Item ${index + 1}`}
+                  {toText(isObject(entry) ? entry.day : undefined) ||
+                    `Item ${index + 1}`}
                 </div>
                 <div className="admin-item-grid">
-                  {isObject(entry)
-                    ? Object.entries(entry).map(([entryKey, entryValue]) =>
-                        isObject(entryValue) || Array.isArray(entryValue) ? (
-                          <RenderValue
-                            key={`${label}-${index}-${entryKey}`}
-                            label={entryKey}
-                            value={entryValue}
-                          />
-                        ) : (
-                          <DetailRow
-                            key={`${label}-${index}-${entryKey}`}
-                            label={entryKey}
-                            value={toText(entryValue)}
-                          />
-                        ),
-                      )
-                    : (
-                      <DetailRow label={`Item ${index + 1}`} value={toText(entry)} />
-                    )}
+                  {isObject(entry) ? (
+                    Object.entries(entry).map(([entryKey, entryValue]) =>
+                      isObject(entryValue) || Array.isArray(entryValue) ? (
+                        <RenderValue
+                          key={`${label}-${index}-${entryKey}`}
+                          label={entryKey}
+                          value={entryValue}
+                        />
+                      ) : (
+                        <DetailRow
+                          key={`${label}-${index}-${entryKey}`}
+                          label={entryKey}
+                          value={toText(entryValue)}
+                        />
+                      ),
+                    )
+                  ) : (
+                    <DetailRow
+                      label={`Item ${index + 1}`}
+                      value={toText(entry)}
+                    />
+                  )}
                 </div>
               </div>
             ))
@@ -324,7 +331,11 @@ export default function TravelAdminDashboard() {
               aria-label="Close menu"
               onClick={() => setMobileMenuOpen(false)}
             />
-            <div className="landing-mobile-menu result-mobile-menu is-logged-in" id="admin-mobile-menu" role="menu">
+            <div
+              className="landing-mobile-menu result-mobile-menu is-logged-in"
+              id="admin-mobile-menu"
+              role="menu"
+            >
               <div className="landing-mobile-menu-user-card">
                 <span className="landing-mobile-menu-user-avatar">
                   <UserRound size={42} />
@@ -336,7 +347,11 @@ export default function TravelAdminDashboard() {
               </div>
 
               <div className="landing-mobile-menu-links">
-                <Link href="/" className="landing-mobile-menu-link" onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  href="/"
+                  className="landing-mobile-menu-link"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <span className="landing-mobile-menu-item-icon">
                     <Home size={18} />
                   </span>
@@ -364,12 +379,16 @@ export default function TravelAdminDashboard() {
                   <span className="landing-mobile-menu-item-icon">
                     <Sparkles size={18} />
                   </span>
-                  <strong>Create New Travel Plan</strong>
+                  <strong>Plan Another Trip</strong>
                   <ChevronRight size={20} />
                 </Link>
               </div>
 
-              <button type="button" className="landing-mobile-menu-logout" onClick={logout}>
+              <button
+                type="button"
+                className="landing-mobile-menu-logout"
+                onClick={logout}
+              >
                 <span className="landing-mobile-menu-item-icon">
                   <LogOut size={18} />
                 </span>
@@ -478,7 +497,10 @@ export default function TravelAdminDashboard() {
 
             <div className="admin-modal-scroll">
               <div className="admin-detail-grid">
-                <DetailRow label="Origin" value={toText(selectedInput.source)} />
+                <DetailRow
+                  label="Origin"
+                  value={toText(selectedInput.source)}
+                />
                 <DetailRow
                   label="Destination"
                   value={toText(selectedInput.destination)}
@@ -487,7 +509,10 @@ export default function TravelAdminDashboard() {
                   label="Travel Days"
                   value={toText(selectedInput.days)}
                 />
-                <DetailRow label="Budget" value={toText(selectedInput.budget)} />
+                <DetailRow
+                  label="Budget"
+                  value={toText(selectedInput.budget)}
+                />
                 <DetailRow
                   label="Travel Style"
                   value={toText(selectedInput.travelStyle)}

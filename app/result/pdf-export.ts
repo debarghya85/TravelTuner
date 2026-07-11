@@ -159,7 +159,6 @@ function firstPage(doc: jsPDF, itinerary: Itinerary, cursor: Cursor) {
     [
       `Adults: ${itinerary.travelerInfo?.adults || 0}`,
       `Children: ${itinerary.travelerInfo?.children || 0}`,
-      `Pricing for: ${itinerary.travelerInfo?.pricingCalculatedFor || "Group"}`,
     ],
     COLORS.green,
     rightW,

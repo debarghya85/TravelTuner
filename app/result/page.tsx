@@ -15,11 +15,12 @@ import {
   Train,
   UsersRound,
   Utensils,
+  Trophy,
 } from "lucide-react";
 import { dayTitle, formatMoney, travelerTotal } from "./itinerary-data";
 import { EmptyItinerary, ResultFrame, useStoredItinerary } from "./ResultShell";
 
-export default function ResultPage() {
+export default function ResultPage({ planId }: { planId?: "view-only" | "premium" | null }) {
   const { itinerary, ready } = useStoredItinerary();
 
   if (!ready) {
@@ -37,10 +38,16 @@ export default function ResultPage() {
   const stays = itinerary.stayOptions || [];
   const local = itinerary.travelOptions?.localTransport?.[0];
   const heroImage = itinerary.coverImageUrl || "/itinery_result.png";
+  const resolvedPlanId = planId || itinerary?.planId || null;
 
   return (
-    <ResultFrame>
+    <ResultFrame planId={resolvedPlanId}>
       <section className="result-hero">
+        <div
+          className={`result-plan-pill hero-badge ${resolvedPlanId === "premium" ? "is-gold" : "is-silver"}`}
+        >
+          <Trophy size={16} />
+        </div>
         <img
           className="result-hero-image"
           src={heroImage}

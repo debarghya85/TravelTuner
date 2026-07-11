@@ -14,10 +14,11 @@ import {
   Share2,
   Sparkles,
   ShieldCheck,
+  X,
   UserRound,
   Trophy,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Itinerary, readStoredItineraryContext } from "./itinerary-data";
 
 const navItems = [
@@ -176,12 +177,17 @@ export function ResultFrame({
   const pathname = usePathname();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [showSilverUpgradePopover, setShowSilverUpgradePopover] =
+    useState(true);
   const [user, setUser] = useState<UserInfo>(null);
+  const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const consumedSilverPopoverRef = useRef(false);
   const storedContext = readStoredItineraryContext();
   const itinerary = storedContext?.itinerary || null;
   const resolvedPlanId =
     planId ?? storedContext?.planId ?? itinerary?.planId ?? "view-only";
   const isPremiumPlan = resolvedPlanId === "premium";
+  const silverPopoverStorageKey = "travel-tuner:show-silver-upgrade-popover";
 
   useEffect(() => {
     const loadUser = async () => {
@@ -194,6 +200,48 @@ export function ResultFrame({
 
     loadUser();
   }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia("(max-width: 760px)");
+    const syncViewport = () => setIsMobileViewport(mediaQuery.matches);
+    syncViewport();
+
+    const handleViewportChange = () => syncViewport();
+    if (mediaQuery.addEventListener) {
+      mediaQuery.addEventListener("change", handleViewportChange);
+    } else {
+      mediaQuery.addListener(handleViewportChange);
+    }
+
+    return () => {
+      if (mediaQuery.removeEventListener) {
+        mediaQuery.removeEventListener("change", handleViewportChange);
+      } else {
+        mediaQuery.removeListener(handleViewportChange);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!isMobileViewport || isPremiumPlan) {
+      return;
+    }
+
+    if (consumedSilverPopoverRef.current) {
+      return;
+    }
+
+    consumedSilverPopoverRef.current = true;
+
+    if (window.sessionStorage.getItem(silverPopoverStorageKey)) {
+      setShowSilverUpgradePopover(true);
+      window.sessionStorage.removeItem(silverPopoverStorageKey);
+    }
+  }, [isMobileViewport, isPremiumPlan]);
 
   const shareOnWhatsApp = () => {
     if (!itinerary) return;
@@ -369,6 +417,106 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
             <span />
           </button>
         </header>
+
+        {showSilverUpgradePopover && !isPremiumPlan ? (
+          <div
+            className="result-silver-popover"
+            role="dialog"
+            aria-label="Upgrade to Gold"
+          >
+            <button
+              type="button"
+              className="result-silver-popover-close"
+              aria-label="Close upgrade popover"
+              onClick={() => setShowSilverUpgradePopover(false)}
+            >
+              <X size={18} />
+            </button>
+
+            <div className="result-silver-popover-handle" aria-hidden="true" />
+
+            <div className="result-silver-popover-hero">
+              <span className="result-silver-popover-badge" aria-hidden="true">
+                <Crown size={32} />
+              </span>
+              <div>
+                <h2>Upgrade to Gold</h2>
+                <h3>Unlock Share &amp; PDF Download!</h3>
+              </div>
+            </div>
+
+            <div className="result-silver-popover-pricing">
+              <div>
+                <span>Gold Plan Price</span>
+                <strong>₹49</strong>
+              </div>
+              <div>
+                <span>Already paid for Silver Plan</span>
+                <strong>₹9</strong>
+              </div>
+              <div className="result-silver-popover-total">
+                <div>
+                  <span>Now Pay Only</span>
+                  <strong>₹35</strong>
+                </div>
+                <div className="result-silver-popover-save">
+                  <span>You Save</span>
+                  <strong>₹5</strong>
+                </div>
+              </div>
+            </div>
+
+            <div className="result-silver-popover-benefits">
+              <div>
+                <span className="result-silver-popover-icon whatsapp">
+                  <MapPin size={18} />
+                </span>
+                <div>
+                  <strong>Share your trip</strong>
+                  <p>Share itinerary via WhatsApp or other apps</p>
+                </div>
+              </div>
+              <div>
+                <span className="result-silver-popover-icon pdf">
+                  <Download size={18} />
+                </span>
+                <div>
+                  <strong>Download as PDF</strong>
+                  <p>Get a beautiful PDF itinerary anytime</p>
+                </div>
+              </div>
+            </div>
+
+            <Link
+              href="/generate-itinerary"
+              className="result-silver-popover-cta"
+            >
+              <LockKeyhole size={18} />
+              <span>Upgrade Now - ₹35</span>
+            </Link>
+
+            <div className="result-silver-popover-footer">
+              <span>
+                <ShieldCheck size={14} />
+                Secure Payment
+              </span>
+              <span>•</span>
+              <span>Instant Access</span>
+            </div>
+            <div className="result-silver-popover-footer">
+              <Link
+                href="#"
+                className="result-silver-popover-later"
+                onClick={(event) => {
+                  event.preventDefault();
+                  setShowSilverUpgradePopover(false);
+                }}
+              >
+                Maybe Later
+              </Link>
+            </div>
+          </div>
+        ) : null}
 
         {mobileMenuOpen ? (
           <>

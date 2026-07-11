@@ -409,7 +409,7 @@ export default function ItineraryListPage() {
                 </div>
               </div>
               <Link
-                href={`/result/${card.id}`}
+                href={`/result/${card.id}${card.planId === "premium" ? "" : "?from=list"}`}
                 className="itineraries-mobile-card-link"
               >
                 <ChevronRight size={28} />
@@ -590,6 +590,11 @@ export default function ItineraryListPage() {
                   >
                     <Trophy size={16} />
                   </div>
+                  <Link
+                    href={`/result/${card.id}${card.planId === "premium" ? "" : "?from=list"}`}
+                    className="itinerary-card-link"
+                    aria-label={`Open ${card.title}`}
+                  />
                 </div>
 
                 <div className="itinerary-card-body">

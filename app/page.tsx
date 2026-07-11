@@ -8,6 +8,7 @@ import {
   CalendarDays,
   CheckCircle2,
   CircleDollarSign,
+  Crown,
   Download,
   Edit3,
   Globe2,
@@ -19,8 +20,12 @@ import {
   Share2,
   ShieldCheck,
   ChevronRight,
+  Medal,
   Sparkles,
   TicketCheck,
+  Shield,
+  Zap,
+  Award,
   WalletCards,
   XCircle,
   LogOut,
@@ -121,8 +126,19 @@ const steps = [
 ];
 
 const plans = [
-  { name: "Silver", price: "9" },
-  { name: "Gold", price: "49" },
+  {
+    name: "Silver",
+    price: "9",
+    icon: Medal,
+    tone: "silver" as const,
+  },
+  {
+    name: "Gold",
+    price: "49",
+    icon: Crown,
+    tone: "gold" as const,
+    badge: "BEST VALUE",
+  },
 ];
 
 const pricingFeatures = [
@@ -159,6 +175,24 @@ const pricingFeatures = [
   },
   { icon: Share2, name: "Share Itinerary", availability: [false, true] },
   { icon: Download, name: "Download as PDF", availability: [false, true] },
+];
+
+const trustPoints = [
+  {
+    icon: Shield,
+    title: "Secure & Trusted",
+    text: "Your data is safe with us",
+  },
+  {
+    icon: Zap,
+    title: "Instant Itinerary",
+    text: "Get your plan in seconds",
+  },
+  {
+    icon: Award,
+    title: "Expertly Curated",
+    text: "By travel & local experts",
+  },
 ];
 
 export default function LandingPage() {
@@ -542,58 +576,118 @@ export default function LandingPage() {
         id="pricing"
         aria-labelledby="pricing-title"
       >
-        <div className="pricing-header">
-          <h2 id="pricing-title">Compare Plans</h2>
-          <p>Choose the itinerary plan that fits the way you travel.</p>
+        <div className="pricing-hero">
+          <div className="pricing-header">
+            <h2 id="pricing-title">Compare Plans</h2>
+            <p>
+              Choose the itinerary plan that fits the way{" "}
+              <span className="pricing-highlight">your</span> travel.
+            </p>
+          </div>
         </div>
 
-        <div className="pricing-table-wrap">
-          <table className="pricing-table">
-            <thead>
-              <tr>
-                <th scope="col">Features</th>
-                {plans.map((plan) => (
-                  <th scope="col" key={plan.name}>
-                    <span className="plan-name">{plan.name}</span>
+        <div className="pricing-card">
+          <div className="pricing-grid">
+            <div className="pricing-features-panel">
+              <div className="pricing-feature-header">Features</div>
+              <div className="pricing-feature-list">
+                {pricingFeatures.map((feature) => {
+                  const Icon = feature.icon;
+                  return (
+                    <div className="pricing-feature-row" key={feature.name}>
+                      <span className="feature-icon-box">
+                        <Icon size={16} />
+                      </span>
+                      <span>{feature.name}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {plans.map((plan) => {
+              const availabilityColumn = pricingFeatures.map((feature) => {
+                return feature.availability[
+                  plans.findIndex((p) => p.name === plan.name)
+                ];
+              });
+
+              return (
+                <div
+                  key={plan.name}
+                  className={`pricing-plan-panel plan-${plan.tone}`}
+                >
+                  <div className="pricing-plan-head">
+                    <span className="plan-name">
+                      <span className={`plan-icon plan-icon-${plan.tone}`}>
+                        <plan.icon size={15} />
+                      </span>
+                      {plan.name}
+                    </span>
                     <strong>
                       <span>Rs</span> {plan.price}
                     </strong>
                     <em>Per Itinerary</em>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {pricingFeatures.map((feature) => {
-                const Icon = feature.icon;
-                return (
-                  <tr key={feature.name}>
-                    <th scope="row">
-                      <Icon size={18} />
-                      <span>{feature.name}</span>
-                    </th>
-                    {feature.availability.map((isAvailable, index) => (
-                      <td key={`${feature.name}-${plans[index].name}`}>
+                  </div>
+
+                  <div className="pricing-plan-body">
+                    {availabilityColumn.map((isAvailable, index) => (
+                      <div
+                        className="pricing-plan-row"
+                        key={`${plan.name}-${pricingFeatures[index].name}`}
+                      >
                         {isAvailable ? (
                           <CheckCircle2
                             className="available-icon"
-                            size={17}
+                            size={18}
                             aria-label="Included"
                           />
                         ) : (
                           <XCircle
                             className="unavailable-icon"
-                            size={17}
+                            size={18}
                             aria-label="Not included"
                           />
                         )}
-                      </td>
+                      </div>
                     ))}
-                  </tr>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="pricing-footer">
+            <div className="trust-row">
+              {trustPoints.map((point) => {
+                const Icon = point.icon;
+                return (
+                  <div className="trust-point" key={point.title}>
+                    <span className="trust-icon">
+                      <Icon size={18} />
+                    </span>
+                    <div>
+                      <strong>{point.title}</strong>
+                      <p>{point.text}</p>
+                    </div>
+                  </div>
                 );
               })}
-            </tbody>
-          </table>
+            </div>
+
+            <div className="action-cell">
+              <button type="button" className="plan-action">
+                Choose Silver
+                <span>Perfect for quick trips</span>
+              </button>
+            </div>
+            <div className="action-cell">
+              <button type="button" className="plan-action is-selected">
+                Choose Gold
+                <span>Best experience. All features.</span>
+              </button>
+            </div>
+          </div>
         </div>
       </section>
 

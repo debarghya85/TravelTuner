@@ -7,10 +7,13 @@ import {
   BriefcaseBusiness,
   CalendarDays,
   Crown,
+  Download,
   Home,
+  LockKeyhole,
   MapPin,
   Share2,
-  Download,
+  Sparkles,
+  ShieldCheck,
   UserRound,
   Trophy,
 } from "lucide-react";
@@ -491,9 +494,63 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
               </button>
             </>
           ) : (
-            <div className="result-plan-lock">
-              Upgrade to <strong>Gold plan </strong>
-              <span>to share your itinerary and download it as a PDF.</span>
+            <div className="result-silver-upgrade-card">
+              <div className="result-silver-upgrade-head">
+                <span
+                  className="result-silver-upgrade-badge"
+                  aria-hidden="true"
+                >
+                  <Crown size={22} />
+                </span>
+                <div>
+                  <strong>Upgrade to Gold</strong>
+                  <p>Share your itinerary and download it as a PDF.</p>
+                </div>
+              </div>
+
+              <div className="result-silver-upgrade-price">
+                <div>
+                  <span>Gold Plan Price</span>
+                  <strong>₹49</strong>
+                </div>
+                <div>
+                  <span>Already paid for Silver Plan</span>
+                  <strong>₹9</strong>
+                </div>
+              </div>
+
+              <div className="result-silver-upgrade-total">
+                <div>
+                  <span>Pay Only</span>
+                  <strong>₹35</strong>
+                </div>
+                <div className="result-silver-upgrade-save">
+                  <span>You Save</span>
+                  <strong>₹5</strong>
+                </div>
+              </div>
+
+              <ul
+                className="result-silver-upgrade-points"
+                aria-label="Included benefits"
+              >
+                <li>
+                  <ShieldCheck size={16} />
+                  Secure payment
+                </li>
+                <li>
+                  <Sparkles size={16} />
+                  Instant access
+                </li>
+              </ul>
+
+              <Link
+                href="/generate-itinerary"
+                className="result-silver-upgrade-cta"
+              >
+                <LockKeyhole size={16} />
+                <span>Unlock Gold • ₹35</span>
+              </Link>
             </div>
           )}
           <Link href="/generate-itinerary" className="primary-action">
@@ -502,7 +559,9 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
         </div>
       </aside>
 
-      <section className={`result-stage ${isPremiumPlan ? "is-premium" : "is-silver"}`}>
+      <section
+        className={`result-stage ${isPremiumPlan ? "is-premium" : "is-silver"}`}
+      >
         {(title || backHref) && (
           <header className="result-topbar">
             {backHref ? (
@@ -574,14 +633,15 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                     <Crown size={28} />
                   </span>
                   <div>
-                    <strong>Gold Upgrade</strong>
-                    <p>Unlock Share &amp; PDF</p>
-                    <p>Download and more.</p>
+                    <strong>Gold Plan</strong>
+                    <p>Unlock Share &amp; Download PDF</p>
                   </div>
                 </div>
-                <Link href="/generate-itinerary" className="result-upgrade-cta gold">
-                  <Crown size={18} />
-                  <span>Upgrade to Gold</span>
+                <Link
+                  href="/generate-itinerary"
+                  className="result-upgrade-cta gold"
+                >
+                  <span>Upgrade • ₹35</span>
                 </Link>
               </div>
 
@@ -593,13 +653,13 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                   <div>
                     <strong>Plan Trip</strong>
                     <p>Customize your itinerary</p>
-                    <p>and preferences.</p>
                   </div>
                 </div>
-                <Link href="/generate-itinerary" className="result-upgrade-cta blue">
-                  <MapPin size={18} />
+                <Link
+                  href="/generate-itinerary"
+                  className="result-upgrade-cta blue"
+                >
                   <span>Plan Trip</span>
-                  <span aria-hidden="true">→</span>
                 </Link>
               </div>
             </div>

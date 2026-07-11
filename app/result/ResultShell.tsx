@@ -6,6 +6,7 @@ import {
   ArrowLeft,
   BriefcaseBusiness,
   CalendarDays,
+  Crown,
   Home,
   MapPin,
   Share2,
@@ -501,7 +502,7 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
         </div>
       </aside>
 
-      <section className="result-stage">
+      <section className={`result-stage ${isPremiumPlan ? "is-premium" : "is-silver"}`}>
         {(title || backHref) && (
           <header className="result-topbar">
             {backHref ? (
@@ -539,7 +540,9 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
           ) : null}
         </div>
 
-        <div className="result-mobile-actions">
+        <div
+          className={`result-mobile-actions ${isPremiumPlan ? "is-premium" : "is-silver"}`}
+        >
           {isPremiumPlan ? (
             <>
               <button
@@ -548,7 +551,7 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                 onClick={shareOnWhatsApp}
               >
                 <Share2 size={18} />
-                <span>Share on WhatsApp</span>
+                <span>Share</span>
               </button>
               <button
                 className="pdf-action"
@@ -556,19 +559,51 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                 onClick={downloadPdf}
               >
                 <Download size={18} />
-                <span>Download as PDF</span>
+                <span>Download</span>
               </button>
+              <Link href="/generate-itinerary" className="primary-action">
+                <MapPin size={18} />
+                <span>Plan Trip</span>
+              </Link>
             </>
           ) : (
-            <div className="result-plan-lock mobile">
-              <strong>Silver plan</strong>
-              <span>Gold unlocks share and PDF download.</span>
+            <div className="result-mobile-upgrade-grid">
+              <div className="result-upgrade-card gold">
+                <div className="result-upgrade-card-head">
+                  <span className="result-upgrade-icon gold" aria-hidden="true">
+                    <Crown size={28} />
+                  </span>
+                  <div>
+                    <strong>Gold Upgrade</strong>
+                    <p>Unlock Share &amp; PDF</p>
+                    <p>Download and more.</p>
+                  </div>
+                </div>
+                <Link href="/generate-itinerary" className="result-upgrade-cta gold">
+                  <Crown size={18} />
+                  <span>Upgrade to Gold</span>
+                </Link>
+              </div>
+
+              <div className="result-upgrade-card blue">
+                <div className="result-upgrade-card-head">
+                  <span className="result-upgrade-icon blue" aria-hidden="true">
+                    <MapPin size={28} />
+                  </span>
+                  <div>
+                    <strong>Plan Trip</strong>
+                    <p>Customize your itinerary</p>
+                    <p>and preferences.</p>
+                  </div>
+                </div>
+                <Link href="/generate-itinerary" className="result-upgrade-cta blue">
+                  <MapPin size={18} />
+                  <span>Plan Trip</span>
+                  <span aria-hidden="true">→</span>
+                </Link>
+              </div>
             </div>
           )}
-          <Link href="/generate-itinerary" className="primary-action">
-            <BriefcaseBusiness size={18} />
-            Plan Another Trip
-          </Link>
         </div>
       </section>
     </main>

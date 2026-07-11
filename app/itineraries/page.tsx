@@ -320,7 +320,7 @@ export default function ItineraryListPage() {
                   <span className="landing-mobile-menu-item-icon">
                     <Sparkles size={18} />
                   </span>
-                  <strong>Create New Travel Plan</strong>
+                  <strong>Plan Another Trip</strong>
                   <span className="landing-mobile-menu-link-arrow">›</span>
                 </button>
               </div>
@@ -355,9 +355,13 @@ export default function ItineraryListPage() {
           >
             <span>
               <span className="itineraries-mobile-cta-icon">
-                <span>+</span>
+                <MapPin
+                  size={20}
+                  strokeWidth={2.6}
+                  className="itineraries-mobile-cta-icon-svg"
+                />
               </span>
-              <strong>Create New Travel Plan</strong>
+              <strong>Plan Another Trip</strong>
             </span>
             <ArrowRight size={28} />
           </button>
@@ -422,7 +426,8 @@ export default function ItineraryListPage() {
                 type="button"
                 onClick={handleCreateTravelPlan}
               >
-                Create your first travel plan
+                <MapPin size={16} />
+                <span>Create your first travel plan</span>
               </button>
             </div>
           ) : null}
@@ -479,7 +484,8 @@ export default function ItineraryListPage() {
             className="premium-button"
             onClick={handleCreateTravelPlan}
           >
-            Create New Travel Plan
+            <MapPin size={16} />
+            <span>Plan Another Trip</span>
           </button>
         </div>
       </aside>
@@ -631,7 +637,8 @@ export default function ItineraryListPage() {
                 type="button"
                 onClick={handleCreateTravelPlan}
               >
-                Create your first travel plan
+                <MapPin size={16} />
+                <span>Create your first travel plan</span>
               </button>
             </div>
           ) : null}

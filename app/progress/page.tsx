@@ -156,8 +156,9 @@ export default function ProgressPage() {
         if (job?.status === "completed" && job?.output) {
           saveItinerary({
             success: true,
-            planId: String((job as any)?.input?.planId || "view-only"),
+            planId: String((job as any)?.input?.planId || "silver"),
             itinerary: job.output,
+            itineraryId: (job as any)?.output?.itineraryId || undefined,
           });
           window.sessionStorage.removeItem(JOB_KEY);
           terminalRef.current = true;

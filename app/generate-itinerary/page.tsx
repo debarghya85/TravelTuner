@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
   Calendar,
+  Home,
   MapPin,
   Minus,
   Plane,
@@ -24,7 +25,7 @@ type TripForm = {
   destination: string;
   days: string;
   budget: number;
-  planId: "view-only" | "premium";
+  planId: "silver" | "gold";
   travelStyle: string;
   adults: number;
   children: number;
@@ -42,7 +43,7 @@ export default function GenerateItineraryPage() {
     destination: "",
     days: "",
     budget: 50000,
-    planId: "premium",
+    planId: "gold",
     travelStyle: "",
     adults: 1,
     children: 0,
@@ -50,6 +51,10 @@ export default function GenerateItineraryPage() {
   });
 
   const handleBack = () => {
+    router.push("/");
+  };
+
+  const handleHome = () => {
     router.push("/");
   };
 
@@ -129,6 +134,7 @@ export default function GenerateItineraryPage() {
     try {
       const payload = {
         ...form,
+        planId: form.planId,
         adults: Number(form.adults),
         children: Number(form.children),
         budget: Number(form.budget),
@@ -183,10 +189,7 @@ export default function GenerateItineraryPage() {
         currency: String(data.currency || data.checkout?.currency || "INR"),
         order_id: String(data.order_id || data.checkout?.order_id || ""),
         name: "Travel Tuner",
-        description:
-          form.planId === "premium"
-            ? "Premium itinerary plan"
-            : "View itinerary plan",
+        description: "Gold itinerary plan",
         prefill: {},
         theme: {
           color: "#ff6a00",
@@ -262,15 +265,18 @@ export default function GenerateItineraryPage() {
           </div>
 
           <div className="generator-copy">
-            <button
-              type="button"
-              className="generator-back-link"
-              aria-label="Go back"
-              onClick={handleBack}
-            >
-              <ArrowLeft size={18} />
-              <span>Back</span>
-            </button>
+            <div className="generator-desktop-actions">
+              <button
+                type="button"
+                className="generator-back-link"
+                aria-label="Go back to home"
+                onClick={handleHome}
+              >
+                <ArrowLeft size={18} />
+                <span>Back</span>
+              </button>
+            </div>
+
             <img src="/tt_logo.png" alt="Travel Tuner" className="form-logo" />
 
             <form className="trip-builder-form" onSubmit={handleSubmit}>
@@ -425,9 +431,9 @@ export default function GenerateItineraryPage() {
                 <div className="plan-selector-grid">
                   {[
                     {
-                      id: "view-only",
+                      id: "silver",
                       price: "₹9",
-                      title: "View Only",
+                      title: "Silver",
                       copy: "Generate and view your itinerary",
                       features: [
                         "AI Generated Itinerary",
@@ -436,12 +442,12 @@ export default function GenerateItineraryPage() {
                       ],
                     },
                     {
-                      id: "premium",
+                      id: "gold",
                       price: "₹49",
-                      title: "Premium",
+                      title: "Gold",
                       copy: "Unlock download, share, and export",
                       features: [
-                        "Everything in View Only",
+                        "Everything in Silver",
                         "Download PDF",
                         "Share with Friends",
                       ],
@@ -454,7 +460,7 @@ export default function GenerateItineraryPage() {
                       onClick={() =>
                         setForm((current) => ({
                           ...current,
-                          planId: plan.id as "view-only" | "premium",
+                          planId: plan.id as "silver" | "gold",
                         }))
                       }
                     >
@@ -466,7 +472,7 @@ export default function GenerateItineraryPage() {
                           <strong>{plan.price}</strong>
                           <span>{plan.title}</span>
                         </div>
-                        {plan.id === "premium" ? (
+                        {plan.id === "gold" ? (
                           <span className="plan-badge">
                             <Star size={14} fill="currentColor" />
                             MOST POPULAR
@@ -497,14 +503,9 @@ export default function GenerateItineraryPage() {
                             <Check size={16} />
                             Selected
                           </>
-                        ) : plan.id === "premium" ? (
-                          <>
-                            <Lock size={16} />
-                            Choose Plan
-                          </>
                         ) : (
                           <>
-                            <Check size={16} />
+                            <Lock size={16} />
                             Choose Plan
                           </>
                         )}
@@ -515,7 +516,7 @@ export default function GenerateItineraryPage() {
               </div>
 
               <button
-                className="submit-itinerary"
+                className="submit-itinerary plan-trip-btn"
                 type="submit"
                 disabled={loading || checkoutLoading}
               >

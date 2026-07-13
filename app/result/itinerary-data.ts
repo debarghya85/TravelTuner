@@ -1,5 +1,7 @@
 "use client";
 
+import { normalizePlanTier } from "../../lib/plan-names";
+
 export const ITINERARY_STORAGE_KEY = "travel-tuner:last-itinerary";
 const ITINERARY_LOCAL_STORAGE_KEY = "travel-tuner:last-itinerary:local";
 
@@ -72,7 +74,7 @@ export type FoodOption = {
 };
 
 export type Itinerary = {
-  planId?: "view-only" | "premium";
+  planId?: "silver" | "gold";
   summary?: string;
   destination?: string;
   coverImageUrl?: string;
@@ -105,14 +107,16 @@ export type Itinerary = {
 
 export type StoredItineraryPayload = {
   success?: boolean;
-  planId?: "view-only" | "premium" | null;
+  planId?: "silver" | "gold" | null;
   savedAt?: number;
+  itineraryId?: string;
   itinerary?: Itinerary;
 };
 
 export type StoredItineraryContext = {
-  planId: "view-only" | "premium";
+  planId: "silver" | "gold";
   itinerary: Itinerary;
+  itineraryId?: string;
 };
 
 export function normalizeItinerary(payload: unknown): Itinerary | null {
@@ -145,7 +149,7 @@ export function readStoredItineraryContext(): StoredItineraryContext | null {
 
     const parsed = parsedItems[0];
     const itinerary = parsed.itinerary || parsed;
-    const planId = (parsed.planId || itinerary.planId || "view-only") as "view-only" | "premium";
+    const planId = normalizePlanTier(parsed.planId || itinerary.planId || "silver");
 
     return {
       planId,
@@ -153,6 +157,7 @@ export function readStoredItineraryContext(): StoredItineraryContext | null {
         ...itinerary,
         planId,
       },
+      itineraryId: parsed.itineraryId || undefined,
     };
   } catch {
     return null;
@@ -171,6 +176,27 @@ export function saveItinerary(payload: unknown) {
 
   window.sessionStorage.setItem(ITINERARY_STORAGE_KEY, serialized);
   window.localStorage.setItem(ITINERARY_LOCAL_STORAGE_KEY, serialized);
+}
+
+export function saveResolvedItinerary(
+  planId: "silver" | "gold",
+  itinerary: Itinerary,
+  itineraryId?: string | null,
+) {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const payload = JSON.stringify({
+    success: true,
+    planId,
+    itinerary,
+    itineraryId: itineraryId || undefined,
+    savedAt: Date.now(),
+  });
+
+  window.sessionStorage.setItem(ITINERARY_STORAGE_KEY, payload);
+  window.localStorage.setItem(ITINERARY_LOCAL_STORAGE_KEY, payload);
 }
 
 export function readItinerary(): Itinerary | null {

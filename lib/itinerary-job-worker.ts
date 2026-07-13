@@ -4,6 +4,7 @@ import { saveItineraryRecord } from "./itinerary-store";
 import { claimItineraryJobForProcessing, getItineraryJobById, updateItineraryJob } from "./itinerary-jobs";
 import { buildPrompt } from "../utils/buildPrompt";
 import { getPaymentOrderById, markPaymentRefunded, requestRazorpayRefund } from "./payments";
+import { normalizePlanTier } from "./plan-names";
 
 export async function processItineraryJob(jobId: string) {
   const job = await claimItineraryJobForProcessing(jobId);
@@ -29,22 +30,25 @@ export async function processItineraryJob(jobId: string) {
     const output = {
       ...aiResponse,
       coverImageUrl,
+      planId: normalizePlanTier(String(latestJob.input?.planId || "silver")),
     };
 
-    await updateItineraryJob(job.id, {
-      status: "completed",
-      stage: "Completed",
-      output,
-      error: null,
-    });
-
-    await saveItineraryRecord({
+    const itineraryId = await saveItineraryRecord({
       input: latestJob.input,
       output,
       userId: latestJob.userId,
     });
 
-    return { started: true, completed: true };
+    await updateItineraryJob(job.id, {
+      status: "completed",
+      stage: "Completed",
+      output: {
+        ...output,
+        itineraryId,
+      },
+      error: null,
+    });
+    return { started: true, completed: true, itineraryId };
   } catch (error: any) {
     console.error("[jobs] itinerary processing failed", error);
 

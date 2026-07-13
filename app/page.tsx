@@ -503,7 +503,7 @@ export default function LandingPage() {
 
           <button
             type="button"
-            className="generate-button"
+            className="plan-trip-btn"
             onClick={handleGenerateTravelPlan}
           >
             Generate My Travel Plan
@@ -675,7 +675,7 @@ export default function LandingPage() {
               })}
             </div>
 
-            <div className="action-cell">
+            {/* <div className="action-cell">
               <button type="button" className="plan-action">
                 Choose Silver
                 <span>Perfect for quick trips</span>
@@ -686,7 +686,7 @@ export default function LandingPage() {
                 Choose Gold
                 <span>Best experience. All features.</span>
               </button>
-            </div>
+            </div> */}
           </div>
         </div>
       </section>

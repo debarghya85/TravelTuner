@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getAuthenticatedUserFromRequest } from "../../../../lib/user-auth";
 import { getItineraryRecordByIdForUser } from "../../../../lib/itinerary-store";
+import { normalizePlanTier } from "../../../../lib/plan-names";
 
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const user = getAuthenticatedUserFromRequest();
@@ -15,10 +16,10 @@ export async function GET(_req: Request, { params }: { params: { id: string } })
 
   return NextResponse.json({
     success: true,
-    planId: itinerary.input?.planId || null,
+    planId: normalizePlanTier(String(itinerary.output?.planId || itinerary.input?.planId || "silver")),
     itinerary: {
-      ...((itinerary.output.itinerary || itinerary.output) as Record<string, unknown>),
-      planId: itinerary.input?.planId || null,
+      ...(itinerary.output as Record<string, unknown>),
+      planId: normalizePlanTier(String(itinerary.output?.planId || itinerary.input?.planId || "silver")),
     },
   });
 }

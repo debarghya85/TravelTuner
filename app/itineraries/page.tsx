@@ -25,7 +25,7 @@ type ItineraryRecord = {
   id: string;
   createdAt: string;
   input?: {
-    planId?: "view-only" | "premium";
+    planId?: "silver" | "gold";
   };
   output: {
     itinerary?: {
@@ -51,7 +51,7 @@ type ItineraryPreview = {
   coverImagePrompt?: string;
   coverImageUrl?: string;
   summary?: string;
-  planId?: "view-only" | "premium";
+  planId?: "silver" | "gold";
   days?: { day?: string; title?: string }[];
   totalEstimatedCost?: number;
   travelerInfo?: {
@@ -108,7 +108,7 @@ type CardData = {
   title: string;
   tagline: string;
   subtitle: string;
-  planId: "view-only" | "premium";
+  planId: "silver" | "gold";
   daysCount: number;
   adults: number;
   children: number;
@@ -117,6 +117,20 @@ type CardData = {
   action: "View Travel Plan" | "Continue Planning";
   tone: "" | "" | "";
 };
+
+function resolveItineraryPreview(item: ItineraryRecord): ItineraryPreview {
+  const output = item.output as Record<string, any> | undefined;
+  const nestedItinerary = output?.itinerary?.itinerary || output?.itinerary;
+  const preview = (output || nestedItinerary || {}) as ItineraryPreview;
+  const resolvedPlanId = normalizePlanTier(
+    output?.planId || preview.planId || item.input?.planId || "silver",
+  );
+
+  return {
+    ...preview,
+    planId: resolvedPlanId,
+  };
+}
 
 export default function ItineraryListPage() {
   const [user, setUser] = useState<UserInfo>(null);
@@ -156,8 +170,7 @@ export default function ItineraryListPage() {
     if (!term) return items;
 
     return items.filter((item) => {
-      const itinerary = (item.output?.itinerary ||
-        item.output) as ItineraryPreview;
+      const itinerary = resolveItineraryPreview(item);
       return [
         itinerary.destination,
         itinerary.summary,
@@ -171,16 +184,13 @@ export default function ItineraryListPage() {
   const cards: CardData[] = useMemo(
     () =>
       filteredItems.map((item, index) => {
-        const itinerary = (item.output?.itinerary ||
-          item.output) as ItineraryPreview;
+        const itinerary = resolveItineraryPreview(item);
         const daysCount = itinerary.days?.length || 12;
         const adults = itinerary.travelerInfo?.adults ?? 2;
         const children = itinerary.travelerInfo?.children ?? 0;
         const totalEstimatedCost = itinerary.totalEstimatedCost ?? 126000;
         const status = "";
-        const planId = (item.input?.planId ||
-          itinerary.planId ||
-          "view-only") as "view-only" | "premium";
+        const planId = itinerary.planId || "silver";
 
         return {
           id: item.id,
@@ -227,17 +237,14 @@ export default function ItineraryListPage() {
   return (
     <main className="itineraries-shell scenic-shell" id="top">
       <section className="itineraries-mobile-stack">
-        <header className="itineraries-mobile-header1 result-mobile-header">
-          <Link href="/" className="result-mobile-logo">
-            <img
-              src="/tt_logo.png"
-              alt="Travel Tuner"
-              className="form-logo logo-small"
-            />
-          </Link>
+        <header className="itineraries-mobile-header1">
+          <div className="itineraries-mobile-header-copy">
+            <h1>My Travel Plans</h1>
+            <p>Manage and revisit all your saved trips.</p>
+          </div>
 
           <button
-            className="mobile-menu-button"
+            className="mobile-menu-button itineraries-mobile-menu-right"
             type="button"
             onClick={() => setMobileMenuOpen((current) => !current)}
             aria-expanded={mobileMenuOpen}
@@ -256,6 +263,7 @@ export default function ItineraryListPage() {
               type="button"
               className="result-menu-backdrop"
               aria-label="Close menu"
+              itineraries-mobile-avatar-button
               onClick={() => setMobileMenuOpen(false)}
             />
             <div
@@ -340,14 +348,6 @@ export default function ItineraryListPage() {
         ) : null}
 
         <section className="itineraries-mobile-hero">
-          <div className="itineraries-mobile-title">
-            <CalendarDays size={54} />
-            <div>
-              <h1>My Travel Plans</h1>
-              <p>Manage and revisit all your saved trips.</p>
-            </div>
-          </div>
-
           <button
             type="button"
             className="itineraries-mobile-cta"
@@ -409,7 +409,7 @@ export default function ItineraryListPage() {
                 </div>
               </div>
               <Link
-                href={`/result/${card.id}${card.planId === "premium" ? "" : "?from=list"}`}
+                href={`/result/${card.id}${card.planId === "gold" ? "" : "?from=list"}`}
                 className="itineraries-mobile-card-link"
               >
                 <ChevronRight size={28} />
@@ -419,10 +419,13 @@ export default function ItineraryListPage() {
 
           {!loading && !cards.length ? (
             <div className="saved-empty itineraries-empty">
-              <h3>No itineraries found</h3>
-              <p>Try a different search, or generate your first trip plan.</p>
+              <div className="itineraries-empty-mobile-art">
+                <img src="/itinerary_body.png" alt="" />
+              </div>
+              <h3>No travel plans yet!</h3>
+              <p>You haven&apos;t saved any travel plans.</p>
               <button
-                className="premium-button"
+                className="create-trip-btn itineraries-mobile-create-btn"
                 type="button"
                 onClick={handleCreateTravelPlan}
               >
@@ -471,23 +474,29 @@ export default function ItineraryListPage() {
           </Link>
         </nav>
 
-        <div className="premium-card">
-          <div className="premium-top">
-            <Sparkles size={17} />
-            <strong>Plan smarter, travel better</strong>
+        {/* <div className="premium-card">
+          <div className="premium-card-art">
+            <img src="/itinerary_leftpanel.png" alt="" />
           </div>
-          <p>
-            Let our AI craft the perfect itinerary for your next adventure..
-          </p>
-          <button
-            type="button"
-            className="premium-button"
-            onClick={handleCreateTravelPlan}
-          >
-            <MapPin size={16} />
-            <span>Plan Another Trip</span>
+          <div className="premium-card-copy">
+            <h3>
+              Plan smarter,
+              <span className="gradient-travel-text">travel better</span>
+            </h3>
+            <p>
+              Let our AI craft the perfect itinerary for your next adventure.
+            </p>
+          </div>
+
+          <button className="plan-trip-btn" onClick={handleCreateTravelPlan}>
+            <MapPin size={16} strokeWidth={2.4} />
+            Plan Another Trip
           </button>
-        </div>
+        </div> */}
+        <button className="plan-trip-btn" onClick={handleCreateTravelPlan}>
+          <MapPin size={16} strokeWidth={2.4} />
+          Plan Another Trip
+        </button>
       </aside>
 
       <section className="itineraries-stage">
@@ -559,13 +568,6 @@ export default function ItineraryListPage() {
                 placeholder="Search your itineraries..."
               />
             </label>
-
-            <button type="button" className="filter-pill active">
-              All Trips <ChevronDown size={16} />
-            </button>
-            <button type="button" className="filter-pill">
-              Sort: Recently Added <ChevronDown size={16} />
-            </button>
           </div>
 
           {loading ? (
@@ -586,12 +588,12 @@ export default function ItineraryListPage() {
                     }}
                   />
                   <div
-                    className={`itinerary-plan-pill overlay ${card.planId === "premium" ? "is-gold" : "is-silver"}`}
+                    className={`itinerary-plan-pill overlay ${card.planId === "gold" ? "is-gold" : "is-silver"}`}
                   >
                     <Trophy size={16} />
                   </div>
                   <Link
-                    href={`/result/${card.id}${card.planId === "premium" ? "" : "?from=list"}`}
+                    href={`/result/${card.id}${card.planId === "gold" ? "" : "?from=list"}`}
                     className="itinerary-card-link"
                     aria-label={`Open ${card.title}`}
                   />
@@ -635,14 +637,18 @@ export default function ItineraryListPage() {
 
           {!loading && !cards.length ? (
             <div className="saved-empty itineraries-empty">
-              <h3>No itineraries found</h3>
-              <p>Try a different search, or generate your first trip plan.</p>
+              <div className="itineraries-empty-art">
+                <img src="/itinerary_body.png" alt="" />
+              </div>
+              <h3>No records available</h3>
+              <p>You haven’t saved any travel plans yet.</p>
+
               <button
-                className="premium-button"
+                className="create-trip-btn"
                 type="button"
                 onClick={handleCreateTravelPlan}
               >
-                <MapPin size={16} />
+                <MapPin size={16} strokeWidth={2.4} />
                 <span>Create your first travel plan</span>
               </button>
             </div>
@@ -652,3 +658,4 @@ export default function ItineraryListPage() {
     </main>
   );
 }
+import { normalizePlanTier } from "../../lib/plan-names";

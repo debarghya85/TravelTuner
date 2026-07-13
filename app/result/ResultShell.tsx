@@ -19,7 +19,14 @@ import {
   Trophy,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { Itinerary, readStoredItineraryContext } from "./itinerary-data";
+import {
+  Itinerary,
+  readStoredItineraryContext,
+  saveResolvedItinerary,
+} from "./itinerary-data";
+import { normalizePlanTier } from "../../lib/plan-names";
+import { startItineraryUpgradeCheckout } from "../../lib/itinerary-upgrade-client";
+import { setLoginReturnPath } from "../../lib/login-redirect";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -53,6 +60,24 @@ export function useStoredItinerary() {
         window.sessionStorage.getItem("travel-tuner:last-request-id") ||
         window.localStorage.getItem("travel-tuner:last-request-id");
 
+      const resolveFromItineraryId = async (itineraryId: string) => {
+        const response = await fetch(`/api/itineraries/${itineraryId}`);
+        if (!response.ok) {
+          return null;
+        }
+
+        const data = await response.json();
+        return data?.itinerary
+          ? {
+              itinerary: data.itinerary as Itinerary,
+              planId: normalizePlanTier(
+                data?.planId || data?.itinerary?.planId || "silver",
+              ),
+              itineraryId,
+            }
+          : null;
+      };
+
       const resolveFromJob = async (resolvedJobId: string) => {
         const response = await fetch(`/api/itinerary-jobs/${resolvedJobId}`);
         if (!response.ok) {
@@ -61,9 +86,7 @@ export function useStoredItinerary() {
 
         const data = await response.json();
         const job = data?.job;
-        const planId = (job?.input?.planId || "view-only") as
-          | "view-only"
-          | "premium";
+        const planId = normalizePlanTier(job?.input?.planId || "silver");
         return job?.output
           ? {
               ...job.output,
@@ -72,16 +95,39 @@ export function useStoredItinerary() {
           : null;
       };
 
+      if (stored?.itineraryId) {
+        try {
+          const resolvedById = await resolveFromItineraryId(stored.itineraryId);
+          if (resolvedById) {
+            setItinerary({
+              ...resolvedById.itinerary,
+              planId: resolvedById.planId,
+            });
+            saveResolvedItinerary(
+              resolvedById.planId,
+              {
+                ...resolvedById.itinerary,
+                planId: resolvedById.planId,
+              },
+              resolvedById.itineraryId,
+            );
+            setReady(true);
+            return;
+          }
+        } catch (error) {
+          console.error("[result] failed to load itinerary by id", error);
+        }
+      }
+
       if (jobId) {
         try {
           const resolvedItinerary = await resolveFromJob(jobId);
           if (resolvedItinerary) {
             setItinerary(resolvedItinerary);
             saveResolvedItinerary(
-              (resolvedItinerary.planId || "view-only") as
-                | "view-only"
-                | "premium",
+              normalizePlanTier(resolvedItinerary.planId || "silver"),
               resolvedItinerary,
+              resolvedItinerary.itineraryId,
             );
             setReady(true);
             return;
@@ -99,9 +145,11 @@ export function useStoredItinerary() {
           if (requestResponse.ok) {
             const requestData = await requestResponse.json();
             const resolvedJob = requestData?.job;
-            const planId = (requestData?.paymentOrder?.planId ||
-              requestData?.request?.planId ||
-              "view-only") as "view-only" | "premium";
+            const planId = normalizePlanTier(
+              requestData?.paymentOrder?.planId ||
+                requestData?.request?.planId ||
+                "silver",
+            );
             const resolvedItinerary = resolvedJob?.output
               ? {
                   ...resolvedJob.output,
@@ -111,7 +159,11 @@ export function useStoredItinerary() {
 
             if (resolvedItinerary) {
               setItinerary(resolvedItinerary);
-              saveResolvedItinerary(planId, resolvedItinerary);
+              saveResolvedItinerary(
+                planId,
+                resolvedItinerary,
+                resolvedJob?.output?.itineraryId,
+              );
               setReady(true);
               return;
             }
@@ -140,25 +192,6 @@ export function useStoredItinerary() {
   return { itinerary, ready };
 }
 
-function saveResolvedItinerary(
-  planId: "view-only" | "premium",
-  itinerary: Itinerary,
-) {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  const payload = JSON.stringify({
-    success: true,
-    planId,
-    itinerary,
-    savedAt: Date.now(),
-  });
-
-  window.sessionStorage.setItem("travel-tuner:last-itinerary", payload);
-  window.localStorage.setItem("travel-tuner:last-itinerary:local", payload);
-}
-
 export function ResultFrame({
   children,
   title,
@@ -166,13 +199,15 @@ export function ResultFrame({
   backHref,
   aside,
   planId,
+  itineraryId,
 }: {
   children: React.ReactNode;
   title?: string;
   subtitle?: string;
   backHref?: string;
   aside?: React.ReactNode;
-  planId?: "view-only" | "premium" | null;
+  planId?: "silver" | "gold" | null;
+  itineraryId?: string | null;
 }) {
   const pathname = usePathname();
   const router = useRouter();
@@ -184,9 +219,11 @@ export function ResultFrame({
   const consumedSilverPopoverRef = useRef(false);
   const storedContext = readStoredItineraryContext();
   const itinerary = storedContext?.itinerary || null;
-  const resolvedPlanId =
-    planId ?? storedContext?.planId ?? itinerary?.planId ?? "view-only";
-  const isPremiumPlan = resolvedPlanId === "premium";
+  const resolvedItineraryId = itineraryId || storedContext?.itineraryId || null;
+  const resolvedPlanId = normalizePlanTier(
+    planId ?? storedContext?.planId ?? itinerary?.planId ?? "silver",
+  );
+  const isPremiumPlan = resolvedPlanId === "gold";
   const silverPopoverStorageKey = "travel-tuner:show-silver-upgrade-popover";
 
   useEffect(() => {
@@ -371,6 +408,16 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
     window.location.href = "/";
   };
 
+  const handleCreateTravelPlan = () => {
+    if (user) {
+      window.location.href = "/generate-itinerary";
+      return;
+    }
+
+    setLoginReturnPath("/generate-itinerary");
+    window.location.href = "/login";
+  };
+
   const downloadPdf = () => {
     if (!itinerary) {
       return;
@@ -383,10 +430,49 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
     window.open("/result/print", "_blank", "noopener,noreferrer");
   };
 
+  const upgradeToGold = async () => {
+    if (!resolvedItineraryId) {
+      alert(
+        "We couldn't find this itinerary's ID. Please reopen the saved result and try again.",
+      );
+      return;
+    }
+
+    await startItineraryUpgradeCheckout({
+      itineraryId: resolvedItineraryId,
+      onVerified: async () => {
+        try {
+          const response = await fetch(
+            `/api/itineraries/${resolvedItineraryId}`,
+          );
+          if (response.ok) {
+            const data = await response.json();
+            const updatedItinerary = data?.itinerary || null;
+            const updatedPlanId = normalizePlanTier(
+              data?.planId || updatedItinerary?.planId || "gold",
+            );
+
+            if (updatedItinerary) {
+              saveResolvedItinerary(
+                updatedPlanId,
+                updatedItinerary,
+                resolvedItineraryId,
+              );
+            }
+          }
+        } catch (error) {
+          console.error("[result] failed to refresh upgraded itinerary", error);
+        } finally {
+          window.location.reload();
+        }
+      },
+    });
+  };
+
   return (
     <main className="result-app">
       <div className="result-mobile-shell">
-        <header className="itineraries-mobile-header1 result-mobile-header">
+        <header className="itineraries-mobile-header-result-details result-mobile-header">
           <button
             className="result-mobile-back"
             type="button"
@@ -394,7 +480,6 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
             aria-label="Back"
           >
             <ArrowLeft size={18} />
-            <span>Back</span>
           </button>
 
           <Link href="/" className="result-mobile-logo">
@@ -487,13 +572,14 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
               </div>
             </div>
 
-            <Link
-              href="/generate-itinerary"
+            <button
+              type="button"
               className="result-silver-popover-cta"
+              onClick={() => void upgradeToGold()}
             >
               <LockKeyhole size={18} />
               <span>Upgrade Now - ₹35</span>
-            </Link>
+            </button>
 
             <div className="result-silver-popover-footer">
               <span>
@@ -631,6 +717,25 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                 type="button"
                 onClick={shareOnWhatsApp}
               >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  className="lucide lucide-share2 lucide-share-2"
+                  aria-hidden="true"
+                >
+                  <circle cx="18" cy="5" r="3"></circle>
+                  <circle cx="6" cy="12" r="3"></circle>
+                  <circle cx="18" cy="19" r="3"></circle>
+                  <line x1="8.59" x2="15.42" y1="13.51" y2="17.49"></line>
+                  <line x1="15.41" x2="8.59" y1="6.51" y2="10.49"></line>
+                </svg>
                 Share on WhatsApp
               </button>
               <button
@@ -638,6 +743,23 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                 type="button"
                 onClick={downloadPdf}
               >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  className="lucide lucide-download"
+                  aria-hidden="true"
+                >
+                  <path d="M12 15V3"></path>
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <path d="m7 10 5 5 5-5"></path>
+                </svg>
                 Download as PDF
               </button>
             </>
@@ -692,18 +814,39 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                 </li>
               </ul>
 
-              <Link
-                href="/generate-itinerary"
+              <button
+                type="button"
                 className="result-silver-upgrade-cta"
+                onClick={() => void upgradeToGold()}
               >
                 <LockKeyhole size={16} />
                 <span>Unlock Gold • ₹35</span>
-              </Link>
+              </button>
             </div>
           )}
-          <Link href="/generate-itinerary" className="primary-action">
+          {/* <div className="premium-card">
+            <div className="premium-card-art">
+              <img src="/itinerary_leftpanel.png" alt="" />
+            </div>
+            <div className="premium-card-copy">
+              <h3>
+                Plan smarter,
+                <span className="gradient-travel-text">travel better</span>
+              </h3>
+              <p>
+                Let our AI craft the perfect itinerary for your next adventure.
+              </p>
+            </div>
+
+            <button className="plan-trip-btn" onClick={handleCreateTravelPlan}>
+              <MapPin size={16} strokeWidth={2.4} />
+              Plan Another Trip
+            </button>
+          </div> */}
+          <button className="plan-trip-btn" onClick={handleCreateTravelPlan}>
+            <MapPin size={16} strokeWidth={2.4} />
             Plan Another Trip
-          </Link>
+          </button>
         </div>
       </aside>
 
@@ -785,12 +928,13 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                     <p>Unlock Share &amp; Download PDF</p>
                   </div>
                 </div>
-                <Link
-                  href="/generate-itinerary"
+                <button
+                  type="button"
                   className="result-upgrade-cta gold"
+                  onClick={() => void upgradeToGold()}
                 >
                   <span>Upgrade • ₹35</span>
-                </Link>
+                </button>
               </div>
 
               <div className="result-upgrade-card blue">

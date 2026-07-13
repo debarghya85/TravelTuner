@@ -17,11 +17,26 @@ import {
   Utensils,
   Trophy,
 } from "lucide-react";
-import { dayTitle, formatMoney, travelerTotal } from "./itinerary-data";
+import {
+  dayTitle,
+  formatMoney,
+  readStoredItineraryContext,
+  travelerTotal,
+} from "./itinerary-data";
 import { EmptyItinerary, ResultFrame, useStoredItinerary } from "./ResultShell";
 
-export default function ResultPage({ planId }: { planId?: "view-only" | "premium" | null }) {
-  const { itinerary, ready } = useStoredItinerary();
+export default function ResultPage({
+  planId,
+  itineraryId,
+  initialItinerary,
+}: {
+  planId?: "silver" | "gold" | null;
+  itineraryId?: string | null;
+  initialItinerary?: any | null;
+}) {
+  const stored = useStoredItinerary();
+  const itinerary = initialItinerary ?? stored.itinerary;
+  const ready = initialItinerary ? true : stored.ready;
 
   if (!ready) {
     return null;
@@ -39,12 +54,13 @@ export default function ResultPage({ planId }: { planId?: "view-only" | "premium
   const local = itinerary.travelOptions?.localTransport?.[0];
   const heroImage = itinerary.coverImageUrl || "/itinery_result.png";
   const resolvedPlanId = planId || itinerary?.planId || null;
+  const resolvedItineraryId = itineraryId || null;
 
   return (
-    <ResultFrame planId={resolvedPlanId}>
+    <ResultFrame planId={resolvedPlanId} itineraryId={resolvedItineraryId}>
       <section className="result-hero">
         <div
-          className={`result-plan-pill hero-badge ${resolvedPlanId === "premium" ? "is-gold" : "is-silver"}`}
+          className={`result-plan-pill hero-badge ${resolvedPlanId === "gold" ? "is-gold" : "is-silver"}`}
         >
           <Trophy size={16} />
         </div>
@@ -130,11 +146,6 @@ export default function ResultPage({ planId }: { planId?: "view-only" | "premium
               <span>Trip Length</span>
               <strong>{days.length} Days</strong>
             </div>
-            <div className="mini-tile">
-              <UsersRound size={20} />
-              <span>Travelers</span>
-              <strong>{travelerTotal(itinerary)}</strong>
-            </div>
           </div>
         </section>
 
@@ -146,7 +157,8 @@ export default function ResultPage({ planId }: { planId?: "view-only" | "premium
             <h2>Traveler Information</h2>
           </div>
           <p className="traveler-info-copy">
-            {itinerary.travelerInfo?.adults || 0} Adults · {itinerary.travelerInfo?.children || 0} Children
+            {itinerary.travelerInfo?.adults || 0} Adults ·{" "}
+            {itinerary.travelerInfo?.children || 0} Children
           </p>
           <div className="traveler-stats">
             <div>

@@ -57,7 +57,7 @@ function PrintPageHeader({ destination }: { destination?: string }) {
 
 function PrintContent() {
   const { itinerary, ready } = useStoredItinerary();
-  const isPremiumPlan = itinerary?.planId === "premium";
+  const isPremiumPlan = itinerary?.planId === "gold";
 
   useEffect(() => {
     if (!ready || !itinerary) {
@@ -92,7 +92,7 @@ function PrintContent() {
           <PrintPageHeader destination={itinerary.destination} />
           <section className="pdf-restricted-card">
             <h1>PDF download is locked</h1>
-            <p>Share and PDF export are available only on the Premium plan.</p>
+            <p>Share and PDF export are available only on the Gold plan.</p>
           </section>
         </div>
       </main>

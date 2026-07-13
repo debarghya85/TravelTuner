@@ -3,14 +3,16 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ResultFrame, EmptyItinerary } from "../ResultShell";
-import { saveItinerary } from "../itinerary-data";
+import { saveResolvedItinerary } from "../itinerary-data";
 import ResultPage from "../page";
+import { normalizePlanTier } from "../../../lib/plan-names";
 
 export default function SavedResultPage({ params }: { params: { id: string } }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [found, setFound] = useState(false);
-  const [planId, setPlanId] = useState<"view-only" | "premium" | null>(null);
+  const [planId, setPlanId] = useState<"silver" | "gold" | null>(null);
+  const [itinerary, setItinerary] = useState<any | null>(null);
 
   useEffect(() => {
       const load = async () => {
@@ -26,15 +28,14 @@ export default function SavedResultPage({ params }: { params: { id: string } }) 
         }
 
       const data = await response.json();
-      const resolvedPlanId = (data.planId || data.itinerary?.planId || "view-only") as
-        | "view-only"
-        | "premium";
-      saveItinerary({
-        success: true,
-        planId: resolvedPlanId,
-        itinerary: data.itinerary || {},
-      });
+      const resolvedPlanId = normalizePlanTier(
+        data.planId || data.itinerary?.planId || "silver",
+      );
       setPlanId(resolvedPlanId);
+      setItinerary(data.itinerary || null);
+      if (data.itinerary) {
+        saveResolvedItinerary(resolvedPlanId, data.itinerary, params.id);
+      }
       setFound(true);
       setLoading(false);
     };
@@ -54,5 +55,11 @@ export default function SavedResultPage({ params }: { params: { id: string } }) 
     return <EmptyItinerary />;
   }
 
-  return <ResultPage planId={planId} />;
+  return (
+    <ResultPage
+      planId={planId}
+      itineraryId={params.id}
+      initialItinerary={itinerary}
+    />
+  );
 }

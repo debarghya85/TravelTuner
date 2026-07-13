@@ -54,8 +54,8 @@ const planCopy: Record<
   string,
   { title: string; tagline: string; perks: string[]; tone: string }
 > = {
-  "view-only": {
-    title: "View Only Plan",
+  silver: {
+    title: "Silver Plan",
     tagline:
       "Get your AI-generated itinerary instantly. Perfect if you only want to view your trip.",
     perks: [
@@ -67,8 +67,8 @@ const planCopy: Record<
     ],
     tone: "bronze",
   },
-  premium: {
-    title: "Premium Plan",
+  gold: {
+    title: "Gold Plan",
     tagline:
       "Everything unlocked for travelers who want export, sharing, and editing tools.",
     perks: [
@@ -158,7 +158,7 @@ function OrderSummary({
   order: PaymentOrder | null;
   plan: { title: string };
 }) {
-  const featuredCount = plan.title === "View Only Plan" ? 2 : 5;
+  const featuredCount = plan.title === "Silver Plan" ? 2 : 5;
   return (
     <div className="checkout-card">
       <h3>
@@ -250,7 +250,7 @@ function PlanHero({
   plan: { title: string; tagline: string; perks: string[]; tone: string };
   amount: string;
 }) {
-  const featuredCount = plan.title === "View Only Plan" ? 2 : 5;
+  const featuredCount = plan.title === "Silver Plan" ? 2 : 5;
   return (
     <section className={`plan-hero plan-tone-${plan.tone}`}>
       <div className="kicker">
@@ -292,14 +292,14 @@ function PlanHero({
           <RotateCcw size={14} /> Refund if AI generation fails
         </span>
       </div>
-      {plan.title === "View Only Plan" ? (
+      {plan.title === "Silver Plan" ? (
         <div className="premium-banner">
           <strong>Need more features?</strong>
           <p>
-            Upgrade to Premium anytime and unlock downloads, sharing and more.
+            Upgrade to Gold anytime and unlock downloads, sharing and more.
           </p>
           <button type="button" className="outline-primary">
-            View Premium Plan <ChevronRight size={14} />
+            View Gold Plan <ChevronRight size={14} />
           </button>
         </div>
       ) : null}
@@ -563,7 +563,7 @@ function ReadyScreen({ order }: { order: PaymentOrder | null }) {
           </div>
           <div>
             <CheckCircle2 size={15} /> <span>Itinerary Type</span>
-            <strong>View Only</strong>
+            <strong>Silver</strong>
           </div>
           <div>
             <CheckCircle2 size={15} /> <span>Access</span>
@@ -606,7 +606,7 @@ function DetailsPage({ order }: { order: PaymentOrder | null }) {
               </div>
               <div>
                 <span>Plan</span>
-                <strong>View Only</strong>
+                <strong>Silver</strong>
               </div>
               <div>
                 <span>Amount</span>
@@ -701,7 +701,7 @@ export function PaymentFlow({
   order: PaymentOrder | null;
 }) {
   const plan = useMemo(
-    () => planCopy[order?.planId || "view-only"],
+    () => planCopy[order?.planId || "silver"],
     [order?.planId],
   );
   if (variant === "razorpay") return <RazorpayCheckout order={order} />;

@@ -2,6 +2,7 @@ import crypto from "crypto";
 import { ObjectId } from "mongodb";
 import { connectDB } from "./mongodb";
 import { PaymentPlanId, getPaymentPlan } from "./payment-plans";
+import { normalizePlanTier } from "./plan-names";
 
 export type PaymentOrderStatus =
   | "payment_pending"
@@ -108,10 +109,18 @@ export async function createItineraryRequestWithPayment(data: {
   planId?: PaymentPlanId;
 }) {
   const db = await connectDB();
-  const plan = getPaymentPlan(data.planId);
+  const plan = getPaymentPlan(normalizePlanTier(data.planId));
   const now = new Date();
+  const gatewayAmount = Math.round(Number(plan.amount || 0) * 100);
+
+  if (gatewayAmount < 100) {
+    throw new Error(
+      `Payment plan "${plan.id}" must be at least INR 1 to create a Razorpay order`,
+    );
+  }
+
   const gatewayOrder = await createRazorpayGatewayOrder({
-    amount: plan.amount * 100,
+    amount: gatewayAmount,
     currency: plan.currency,
     receipt: `tt_${crypto.randomUUID().replace(/-/g, "")}`,
     notes: {
@@ -533,6 +542,32 @@ export function verifyRazorpayWebhookSignature(rawBody: string, signature: strin
   const expected = crypto.createHmac("sha256", secret).update(rawBody).digest("hex");
   const expectedBuffer = Buffer.from(expected);
   const signatureBuffer = Buffer.from(signature);
+
+  if (expectedBuffer.length !== signatureBuffer.length) {
+    return false;
+  }
+
+  return crypto.timingSafeEqual(expectedBuffer, signatureBuffer);
+}
+
+export function verifyRazorpayPaymentSignature(params: {
+  orderId: string;
+  paymentId: string;
+  signature: string | null | undefined;
+}) {
+  if (!params.signature) {
+    return false;
+  }
+
+  const secret = process.env.RAZORPAY_KEY_SECRET || "";
+  if (!secret) {
+    return false;
+  }
+
+  const payload = `${params.orderId}|${params.paymentId}`;
+  const expected = crypto.createHmac("sha256", secret).update(payload).digest("hex");
+  const expectedBuffer = Buffer.from(expected);
+  const signatureBuffer = Buffer.from(params.signature);
 
   if (expectedBuffer.length !== signatureBuffer.length) {
     return false;

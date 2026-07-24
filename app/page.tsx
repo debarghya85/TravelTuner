@@ -81,17 +81,17 @@ const benefits = [
   {
     icon: Sparkles,
     title: "Smart & Personalized",
-    text: "Itinerary tailored to your preferences",
+    text: "Customized for your travel style, budget, and interests.",
   },
   {
     icon: CalendarDays,
     title: "Instant Itinerary Generation",
-    text: "Get your plan in less than a minute",
+    text: "Get a complete AI-powered itinerary in under a minute.",
   },
   {
     icon: WalletCards,
-    title: "Pay & Access",
-    text: "One-time payment per itinerary",
+    title: "Complete Travel Planning",
+    text: "Includes stay recommendations, travel routes, budgets, local food, and sightseeing.",
   },
 ];
 
@@ -474,14 +474,13 @@ export default function LandingPage() {
           </div>
 
           <h2 id="landing-title">
-            Your Perfect Trip,
-            <br />
-            Planned in <span>Seconds</span>
+            Plan Your Perfect Trip in Under a <span>Minute</span>
           </h2>
 
           <p className="hero-text">
-            Get a personalized day-by-day itinerary in seconds. Pay once, get
-            your plan, and travel stress-free.
+            Tell us where you're going, and our AI creates a personalized
+            itinerary with hotels, transport, food, sightseeing, and budget
+            planning—all in under a minute.
           </p>
 
           <div className="landing-benefits">
@@ -506,13 +505,12 @@ export default function LandingPage() {
             className="plan-trip-btn"
             onClick={handleGenerateTravelPlan}
           >
-            Generate My Travel Plan
+            ✨ Generate AI Itinerary
             <ArrowRight size={24} />
           </button>
 
           <p className="payment-note">
-            <ShieldCheck size={17} />
-            Secure Payments. Instant Access.
+            🔒 Secure Google Sign-In • One-Time Payment • AI-Generated Itinerary
           </p>
         </div>
 
@@ -529,7 +527,7 @@ export default function LandingPage() {
           />
 
           <div className="trip-preview-card">
-            <h2>Your Trip at a Glance</h2>
+            <h2>Your AI Itinerary Preview</h2>
             {tripPreview.map((item) => {
               const Icon = item.icon;
               return (

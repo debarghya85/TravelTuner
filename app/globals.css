@@ -3755,34 +3755,58 @@ input[type="range"]::-moz-range-thumb {
   isolation: isolate;
 }
 
-.hero-photo > img {
+.hero-slides {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  z-index: -2;
 }
 
-.hero-photo::after {
+.hero-slide {
+  position: absolute;
+  inset: -3%;
+  background-position: center;
+  background-size: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  transition:
+    opacity 1.4s ease-in-out,
+    transform 7s ease-out;
+  will-change: opacity, transform;
+}
+
+.hero-slide-active {
+  opacity: 1;
+  transform: scale(1.12);
+}
+
+.hero-photo-overlay {
   position: absolute;
   inset: 0;
-  z-index: 1;
+  z-index: -1;
   content: "";
-  background: linear-gradient(90deg, rgba(5, 31, 86, 0.12), transparent 60%);
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(3, 16, 36, 0.05) 0%, rgba(3, 16, 36, 0.12) 48%, rgba(3, 16, 36, 0.45) 100%),
+    linear-gradient(90deg, rgba(0, 0, 0, 0.05) 0%, transparent 60%);
 }
 
 .trip-preview-card {
   position: absolute;
-  top: 64px;
-  left: 24px;
+  left: 25%;
+  bottom: 42px;
   z-index: 2;
-  width: min(275px, calc(100% - 48px));
-  padding: 18px 18px 12px;
+  width: min(88%, 260px);
+  padding: 24px;
+  transform: translateX(-50%);
   background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(255, 255, 255, 0.88);
-  border-radius: 14px;
-  box-shadow: 0 24px 55px rgba(15, 46, 104, 0.18);
-  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 24px;
+  opacity:0.7;
+  box-shadow:
+    0 24px 70px rgba(4, 18, 38, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
 }
 
 .trip-preview-card h2 {
@@ -3814,6 +3838,76 @@ input[type="range"]::-moz-range-thumb {
   color: #4d5a78;
   font-size: 11px;
   font-weight: 700;
+}
+
+.hero-dots {
+  position: absolute;
+  right: 28px;
+  bottom: 22px;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.hero-dot {
+  width: 8px;
+  height: 8px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.55);
+  transition:
+    width 0.35s ease,
+    background 0.35s ease,
+    transform 0.35s ease;
+}
+
+.hero-dot:hover {
+  transform: scale(1.25);
+  background: #ffffff;
+}
+
+.hero-dot-active {
+  width: 28px;
+  background: #ffffff;
+}
+
+@media (max-width: 768px) {
+  .hero-photo {
+    min-height: 520px;
+    border-radius: 0 0 0 54px;
+  }
+
+  .hero-slide {
+    background-position: center;
+  }
+
+  .trip-preview-card {
+    bottom: 42px;
+    width: calc(100% - 32px);
+    padding: 19px;
+    border-radius: 20px;
+  }
+
+  .hero-dots {
+    right: 18px;
+    bottom: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-slide,
+  .trip-preview-card,
+  .hero-dot {
+    animation: none;
+    transition: none;
+  }
+
+  .hero-slide-active {
+    transform: scale(1);
+  }
 }
 
 .how-it-works {

@@ -102,6 +102,17 @@ const tripPreview = [
   { icon: TicketCheck, day: "Day 4", text: "Leisure & Shopping" },
 ];
 
+const heroImages = [
+  "/home-1.jpg",
+  "/home-2.jpg",
+  "/home-3.jpg",
+  "/home-4.jpg",
+  "/home-5.jpg",
+  "/home-6.jpg",
+  "/home-7.jpg",
+  "/home-8.jpg",
+];
+
 const steps = [
   {
     icon: Plane,
@@ -197,6 +208,7 @@ const trustPoints = [
 
 export default function LandingPage() {
   const [user, setUser] = useState<UserInfo>(null);
+  const [activeHeroImage, setActiveHeroImage] = useState(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
@@ -222,6 +234,16 @@ export default function LandingPage() {
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const interval = window.setInterval(() => {
+      setActiveHeroImage((current) => (current + 1) % heroImages.length);
+    }, 9500);
+
+    return () => window.clearInterval(interval);
   }, []);
 
   const handleLogout = async () => {
@@ -515,16 +537,17 @@ export default function LandingPage() {
         </div>
 
         <div className="hero-photo" aria-label="Santorini travel preview">
-          <img
-            src="https://images.pexels.com/photos/1010657/pexels-photo-1010657.jpeg?auto=compress&cs=tinysrgb&w=1400"
-            alt="Travelers looking over a coastal Greek destination"
-            referrerPolicy="no-referrer"
-            loading="eager"
-            decoding="async"
-            onError={(event) => {
-              event.currentTarget.src = "/default-avatar.svg";
-            }}
-          />
+          <div className="hero-slides" aria-hidden="true">
+            {heroImages.map((image, index) => (
+              <div
+                key={image}
+                className={`hero-slide ${index === activeHeroImage ? "hero-slide-active" : ""}`}
+                style={{ backgroundImage: `url("${image}")` }}
+              />
+            ))}
+          </div>
+
+          <div className="hero-photo-overlay" aria-hidden="true" />
 
           <div className="trip-preview-card">
             <h2>Your AI Itinerary Preview</h2>
@@ -542,6 +565,19 @@ export default function LandingPage() {
                 </div>
               );
             })}
+          </div>
+
+          <div className="hero-dots" aria-label="Choose destination image">
+            {heroImages.map((_, index) => (
+              <button
+                type="button"
+                key={index}
+                className={`hero-dot ${index === activeHeroImage ? "hero-dot-active" : ""}`}
+                aria-label={`Show travel image ${index + 1}`}
+                aria-current={index === activeHeroImage ? "true" : undefined}
+                onClick={() => setActiveHeroImage(index)}
+              />
+            ))}
           </div>
         </div>
       </section>

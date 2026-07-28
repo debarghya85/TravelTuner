@@ -121,6 +121,7 @@
   color: #132359;
   font-size: 16px;
   line-height: 1.15;
+  text-align:center;
 }
 
 .result-silver-upgrade-head p {
@@ -128,6 +129,7 @@
   color: #596d94;
   font-size: 13px;
   line-height: 1.45;
+  text-align:center;
 }
 
 .result-silver-upgrade-price,

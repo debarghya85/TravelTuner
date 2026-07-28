@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -17,7 +17,6 @@ import {
   Users,
   Wallet,
 } from "lucide-react";
-import { setLoginReturnPath } from "../../lib/login-redirect";
 import { openRazorpayCheckout } from "../../lib/razorpay-client";
 
 type TripForm = {
@@ -38,6 +37,8 @@ export default function GenerateItineraryPage() {
   const [checkoutLoading, setCheckoutLoading] = useState(false);
   const [adultInfo, setAdultInfo] = useState("");
   const [childrenInfo, setChildrenInfo] = useState("");
+  const popupRef = useRef<Window | null>(null);
+  const authResolverRef = useRef<((value: boolean) => void) | null>(null);
   const [form, setForm] = useState<TripForm>({
     source: "",
     destination: "",
@@ -57,6 +58,20 @@ export default function GenerateItineraryPage() {
   const handleHome = () => {
     router.push("/");
   };
+
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.origin !== window.location.origin) return;
+      if (event.data?.type !== "travel-tuner-auth-success") return;
+      authResolverRef.current?.(true);
+      authResolverRef.current = null;
+      popupRef.current?.close();
+      popupRef.current = null;
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
 
   const handleChange = (
     event:
@@ -116,6 +131,49 @@ export default function GenerateItineraryPage() {
     });
   };
 
+  const waitForGoogleLogin = () => {
+    return new Promise<boolean>((resolve) => {
+      authResolverRef.current = resolve;
+      const popupUrl = `/api/auth/start/google?returnTo=${encodeURIComponent("/auth/popup-complete?next=/generate-itinerary")}`;
+      popupRef.current = window.open(
+        popupUrl,
+        "travel-tuner-google-auth",
+        "width=520,height=680,left=120,top=80",
+      );
+
+      if (!popupRef.current) {
+        authResolverRef.current = null;
+        resolve(false);
+        return;
+      }
+
+      const interval = window.setInterval(() => {
+        if (!popupRef.current || popupRef.current.closed) {
+          window.clearInterval(interval);
+          if (authResolverRef.current) {
+            authResolverRef.current(false);
+            authResolverRef.current = null;
+          }
+        }
+      }, 500);
+    });
+  };
+
+  const ensureLoggedIn = async () => {
+    const meResponse = await fetch("/api/auth/me");
+    if (meResponse.ok) {
+      return true;
+    }
+
+    const authenticated = await waitForGoogleLogin();
+    if (!authenticated) {
+      throw new Error("Login is required to continue");
+    }
+
+    const confirmResponse = await fetch("/api/auth/me");
+    return confirmResponse.ok;
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
@@ -132,6 +190,11 @@ export default function GenerateItineraryPage() {
     setLoading(true);
 
     try {
+      const loggedIn = await ensureLoggedIn();
+      if (!loggedIn) {
+        throw new Error("Login is required to continue");
+      }
+
       const payload = {
         ...form,
         planId: form.planId,
@@ -157,11 +220,6 @@ export default function GenerateItineraryPage() {
           // Ignore non-JSON error bodies and fall back to the default message.
         }
 
-        if (response.status === 401) {
-          setLoginReturnPath("/generate-itinerary");
-          router.push("/login");
-          return;
-        }
         throw new Error(message);
       }
 

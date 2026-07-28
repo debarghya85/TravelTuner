@@ -156,10 +156,7 @@ export default function ResultPage({
             </span>
             <h2>Traveler Information</h2>
           </div>
-          {/* <p className="traveler-info-copy">
-            {itinerary.travelerInfo?.adults || 0} Adults ·{" "}
-            {itinerary.travelerInfo?.children || 0} Children
-          </p> */}
+
           <div className="traveler-stats">
             {/* <div>
               <UsersRound size={22} />

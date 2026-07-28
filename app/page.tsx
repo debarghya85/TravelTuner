@@ -34,7 +34,6 @@ import {
   UserRound,
   Smartphone,
 } from "lucide-react";
-import { setLoginReturnPath } from "../lib/login-redirect";
 
 type SampleItinerary = {
   id: string;
@@ -379,13 +378,7 @@ export default function LandingPage() {
   };
 
   const handleGenerateTravelPlan = () => {
-    if (user) {
-      window.location.href = "/generate-itinerary";
-      return;
-    }
-
-    setLoginReturnPath("/generate-itinerary");
-    window.location.href = "/login";
+    window.location.href = "/generate-itinerary";
   };
 
   const handleDirectLogin = () => {
@@ -448,7 +441,8 @@ export default function LandingPage() {
 
         <nav className="landing-nav" aria-label="Main navigation">
           <a href="#how-it-works">How It Works</a>
-          <a href="#pricing">Pricing</a>
+          <a href="#pricing-faq-grid">Pricing</a>
+          <a href="#pricing-faq-grid">FAQ</a>
           {user ? (
             <>
               <Link href="/itineraries">My Travel Plans</Link>
@@ -632,7 +626,10 @@ export default function LandingPage() {
                   <ChevronRight size={20} />
                 </a>
 
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
+                <a
+                  href="#pricing-faq-grid"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <span className="landing-mobile-menu-item-icon">
                     <CircleDollarSign size={18} />
                   </span>
@@ -675,7 +672,10 @@ export default function LandingPage() {
                   <ChevronRight size={20} />
                 </a>
 
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)}>
+                <a
+                  href="#pricing-faq-grid"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
                   <span className="landing-mobile-menu-item-icon">
                     <CircleDollarSign size={18} />
                   </span>
@@ -895,15 +895,23 @@ export default function LandingPage() {
       </section>
 
       <section className="stats-strip" aria-label="Travel Tuner stats">
-        {stats.map((item) => (
-          <div className="stat-item" key={item.label}>
-            <strong>{item.value}</strong>
-            <span>{item.label}</span>
-          </div>
-        ))}
+        {trustPoints.map((point) => {
+          const Icon = point.icon;
+          return (
+            <div className="bottom-trust-item" key={point.title}>
+              <span className="bottom-trust-icon">
+                <Icon size={18} />
+              </span>
+              <div>
+                <strong>{point.title}</strong>
+                <p>{point.text}</p>
+              </div>
+            </div>
+          );
+        })}
       </section>
 
-      <section className="pricing-faq-grid">
+      <section className="pricing-faq-grid" id="pricing-faq-grid">
         <div className="pricing-stack">
           <h2>Simple & Transparent Pricing</h2>
           <div className="pricing-cards">
@@ -994,11 +1002,11 @@ export default function LandingPage() {
           className="cta-strip-btn"
           onClick={handleGenerateTravelPlan}
         >
-          Generate My Itinerary <ArrowRight size={18} />
+          ✨ Generate AI Itinerary <ArrowRight size={18} />
         </button>
       </section>
 
-      <section className="bottom-trust-row">
+      {/* <section className="bottom-trust-row">
         {trustPoints.map((point) => {
           const Icon = point.icon;
           return (
@@ -1013,7 +1021,7 @@ export default function LandingPage() {
             </div>
           );
         })}
-      </section>
+      </section> */}
 
       <section
         className="pricing-section"

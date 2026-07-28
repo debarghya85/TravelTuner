@@ -848,16 +848,14 @@ export default function LandingPage() {
                 <h3>{card.title}</h3>
               </div>
               <div className="sample-itinerary-body">
-                <div className="sample-tags">
-                  <span>Beaches</span>
-                  <span>Nightlife</span>
-                  <span>Seafood</span>
-                </div>
                 <div className="sample-meta">
                   <strong>
                     Budget: ₹{card.budget.toLocaleString("en-IN")}
                   </strong>
-                  <p>(For {card.adults} Adults)</p>
+                  {/* <p>(For {card.adults} Adults)</p> */}
+                  <p>
+                    {card.adults || 0} Adults · {card.children || 0} Children
+                  </p>
                 </div>
                 <button
                   type="button"

@@ -4203,7 +4203,7 @@ input[type="range"]::-moz-range-thumb {
 
 .faq-support-btn {
   min-height: 38px;
-  padding: 0 18px;
+  padding:10px 20px 10px 20px;
   border: 1px solid #7f66ff;
   border-radius: 8px;
   background: #fff;

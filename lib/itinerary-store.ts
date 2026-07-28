@@ -102,6 +102,28 @@ export async function listItineraryRecordsByUser(userId: string) {
     .sort((a, b) => b.createdAtMs - a.createdAtMs);
 }
 
+export async function listGlobalItineraryRecords() {
+  const client = await connectMongoClient();
+  const dbName = getDatabaseName();
+  const records = await Promise.all(
+    COLLECTION_NAMES.map(async (collectionName) => {
+      return client
+        .db(dbName)
+        .collection(collectionName)
+        .find({ isGlobal: true })
+        .sort({ createdAt: -1 })
+        .limit(200)
+        .toArray();
+    }),
+  );
+
+  return records
+    .flat()
+    .map(normalizeRecord)
+    .filter((record, index, array) => array.findIndex((item) => item.id === record.id) === index)
+    .sort((a, b) => b.createdAtMs - a.createdAtMs);
+}
+
 export async function getItineraryRecordById(recordId: string) {
   const client = await connectMongoClient();
   const dbName = getDatabaseName();
@@ -125,6 +147,31 @@ export async function getItineraryRecordByIdForUser(recordId: string, userId: st
       .db(dbName)
       .collection(collectionName)
       .findOne({ _id: new ObjectId(recordId), userId: queryUserId });
+    if (record) {
+      return normalizeRecord(record as any);
+    }
+  }
+
+  return null;
+}
+
+export async function getItineraryRecordByIdVisibleToUser(recordId: string, userId?: string) {
+  const client = await connectMongoClient();
+  const dbName = getDatabaseName();
+  const objectId = new ObjectId(recordId);
+
+  for (const collectionName of COLLECTION_NAMES) {
+    const collection = client.db(dbName).collection(collectionName);
+    const record = userId
+      ? await collection.findOne({
+          _id: objectId,
+          $or: [{ userId: new ObjectId(userId) }, { isGlobal: true }],
+        })
+      : await collection.findOne({
+          _id: objectId,
+          isGlobal: true,
+        });
+
     if (record) {
       return normalizeRecord(record as any);
     }

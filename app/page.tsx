@@ -26,6 +26,7 @@ import {
   Shield,
   Zap,
   Award,
+  ChevronDown,
   WalletCards,
   XCircle,
   LogOut,
@@ -34,6 +35,27 @@ import {
   Smartphone,
 } from "lucide-react";
 import { setLoginReturnPath } from "../lib/login-redirect";
+
+type SampleItinerary = {
+  id: string;
+  createdAt: string;
+  input?: {
+    planId?: "silver" | "gold";
+  };
+  output?: {
+    itinerary?: {
+      destination?: string;
+      tagline?: string;
+      coverImageUrl?: string;
+      summary?: string;
+      totalEstimatedCost?: number;
+      travelerInfo?: {
+        adults?: number;
+        children?: number;
+      };
+    };
+  };
+};
 
 type UserInfo = {
   id: string;
@@ -204,11 +226,102 @@ const trustPoints = [
     title: "Expertly Curated",
     text: "By travel & local experts",
   },
+  {
+    icon: Download,
+    title: "Instant Download (Gold Plan)",
+    text: "Get PDF & share on WhatsApp",
+  },
+];
+
+const includedFeatures = [
+  {
+    icon: CalendarDays,
+    title: "Day-wise Itinerary",
+    text: "Detailed plan for each day",
+  },
+  {
+    icon: Hotel,
+    title: "Stay Recommendations",
+    text: "Best hotels for your budget",
+  },
+  { icon: Globe2, title: "Food Suggestions", text: "Local food to try" },
+  {
+    icon: Plane,
+    title: "Transport Options",
+    text: "Flights, trains & local transport",
+  },
+  {
+    icon: CircleDollarSign,
+    title: "Budget Breakdown",
+    text: "Complete cost estimation",
+  },
+  {
+    icon: Sparkles,
+    title: "Attractions & Activities",
+    text: "Top places & experiences",
+  },
+  { icon: Map, title: "Google Maps", text: "Hotel location guides" },
+  { icon: Edit3, title: "Travel Tips", text: "Packing & travel tips" },
+  { icon: LockKeyhole, title: "Shopping Guide", text: "Best places to shop" },
+];
+
+const stats = [
+  { value: "1,250+", label: "Itineraries Generated" },
+  { value: "98%", label: "Happy Travelers" },
+  { value: "4.8★", label: "Average Rating" },
+  { value: "50+", label: "Destinations Covered" },
+];
+
+const faqs = [
+  {
+    question: "Is my data safe with Travel Tuner?",
+    answer:
+      "Yes. Your information is used only to generate your itinerary and process your request. Payments are handled securely through Razorpay.",
+  },
+  {
+    question: "How accurate are the budgets?",
+    answer:
+      "The budgets are estimated based on your destination, trip duration, travel style, transport, stay, food, and activities. Actual prices may vary depending on availability and travel dates.",
+  },
+  {
+    question: "Can I customize the itinerary?",
+    answer:
+      "Yes. You can choose your destination, number of days, budget, travel style, travellers, interests, and preferences before generating the itinerary.",
+  },
+  {
+    question: "Will I get hotel bookings too?",
+    answer:
+      "Travel Tuner provides hotel and stay recommendations, but it does not currently make bookings on your behalf.",
+  },
+  {
+    question: "Can I download the itinerary?",
+    answer:
+      "Yes. The Gold plan allows you to download the itinerary as a PDF and share it with others through Whatsapp.",
+  },
+  {
+    question: "Is there any subscription?",
+    answer:
+      "No. Travel Tuner does not require a subscription. You only pay for the itinerary as per the plan selected.",
+  },
+  {
+    question: "What payment methods do you accept?",
+    answer:
+      "Payments are processed securely through Razorpay and may include UPI, credit cards, debit cards, net banking, and supported wallets.",
+  },
+  {
+    question: "How long does it take to generate?",
+    answer:
+      "Most itineraries are generated within a minute, depending on the trip details, Number of days and server availability.",
+  },
 ];
 
 export default function LandingPage() {
   const [user, setUser] = useState<UserInfo>(null);
   const [activeHeroImage, setActiveHeroImage] = useState(0);
+  const [sampleItineraries, setSampleItineraries] = useState<SampleItinerary[]>(
+    [],
+  );
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);
@@ -223,6 +336,17 @@ export default function LandingPage() {
     };
 
     load();
+  }, []);
+
+  useEffect(() => {
+    const loadSamples = async () => {
+      const res = await fetch("/api/home/sample-itineraries");
+      if (!res.ok) return;
+      const data = await res.json();
+      setSampleItineraries((data.itineraries || []).slice(0, 3));
+    };
+
+    loadSamples();
   }, []);
 
   useEffect(() => {
@@ -267,6 +391,51 @@ export default function LandingPage() {
   const handleDirectLogin = () => {
     window.location.href = "/api/auth/start/google?returnTo=%2F";
   };
+
+  const openSampleResult = (id: string) => {
+    window.location.href = `/result/${id}`;
+  };
+
+  const accentColors = ["indigo", "amber", "green"];
+
+  const sampleCards = sampleItineraries.map((item, index) => {
+    const output = item.output ?? {};
+    const input = item.input ?? {};
+
+    const adults = output.travelerInfo?.adults ?? input.adults ?? 0;
+    const children = output.travelerInfo?.children ?? input.children ?? 0;
+
+    const days = Number(input.days ?? output.days?.length ?? 0);
+    const nights = Math.max(days - 1, 0);
+
+    const planId = output.planId ?? output.itinerary?.planId ?? input.planId;
+
+    return {
+      id: item._id?.$oid ?? item._id ?? item.id,
+
+      title: output.destination ?? input.destination ?? "Sample itinerary",
+
+      tagline: output.tagline ?? output.summary ?? "Global sample itinerary",
+
+      image: output.coverImageUrl ?? "/itinery_result.png",
+
+      budget: output.totalEstimatedCost ?? input.budget ?? 0,
+
+      travelers: adults + children,
+
+      adults,
+
+      children,
+
+      planLabel: `${days} ${days === 1 ? "Day" : "Days"} / ${nights} ${
+        nights === 1 ? "Night" : "Nights"
+      }`,
+
+      accent: accentColors[index % accentColors.length],
+
+      planId,
+    };
+  });
 
   return (
     <main className="landing-page">
@@ -652,6 +821,200 @@ export default function LandingPage() {
             );
           })}
         </div>
+      </section>
+
+      <section
+        className="see-what-you-get"
+        aria-labelledby="sample-itineraries-title"
+      >
+        <div className="section-heading">
+          <span className="section-kicker">✨</span>
+          <h2 id="sample-itineraries-title">See What You'll Get</h2>
+        </div>
+        <p className="section-subtitle">
+          Explore sample itineraries created by our AI for amazing destinations.
+        </p>
+
+        <div className="sample-itineraries-grid">
+          {sampleCards.map((card) => (
+            <article className="sample-itinerary-card" key={card.id}>
+              <div
+                className="sample-itinerary-image"
+                style={{ backgroundImage: `url("${card.image}")` }}
+              >
+                <div className={`sample-itinerary-pill ${card.accent}`}>
+                  {card.planLabel}
+                </div>
+                <h3>{card.title}</h3>
+              </div>
+              <div className="sample-itinerary-body">
+                <div className="sample-tags">
+                  <span>Beaches</span>
+                  <span>Nightlife</span>
+                  <span>Seafood</span>
+                </div>
+                <div className="sample-meta">
+                  <strong>
+                    Budget: ₹{card.budget.toLocaleString("en-IN")}
+                  </strong>
+                  <p>(For {card.adults} Adults)</p>
+                </div>
+                <button
+                  type="button"
+                  className={`sample-view-btn ${card.accent}`}
+                  onClick={() => openSampleResult(card.id)}
+                >
+                  View Sample <ArrowRight size={16} />
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <a className="view-all-samples" href="/itineraries">
+          View All Sample Itineraries <ArrowRight size={16} />
+        </a>
+      </section>
+
+      <section className="included-section">
+        <h2>Everything Included in Your Itinerary</h2>
+        <div className="included-grid">
+          {includedFeatures.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div className="included-item" key={item.title}>
+                <span className="included-icon">
+                  <Icon size={18} />
+                </span>
+                <div>
+                  <strong>{item.title}</strong>
+                  <p>{item.text}</p>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="stats-strip" aria-label="Travel Tuner stats">
+        {stats.map((item) => (
+          <div className="stat-item" key={item.label}>
+            <strong>{item.value}</strong>
+            <span>{item.label}</span>
+          </div>
+        ))}
+      </section>
+
+      <section className="pricing-faq-grid">
+        <div className="pricing-stack">
+          <h2>Simple & Transparent Pricing</h2>
+          <div className="pricing-cards">
+            {plans.map((plan, planIndex) => (
+              <div
+                key={plan.name}
+                className={`price-card ${plan.tone} ${planIndex === 1 ? "featured" : ""}`}
+              >
+                {planIndex === 1 ? (
+                  <div className="price-badge">A Most Popular</div>
+                ) : null}
+                <div className="price-title">{plan.name} Plan</div>
+                <div className="price-value">
+                  <span>₹</span>
+                  {plan.price}
+                </div>
+                <div className="price-subtitle">One-time payment</div>
+                <ul className="price-list">
+                  {(planIndex === 0
+                    ? [
+                        "AI Generated Itinerary",
+                        "Day-wise travel plan",
+                        "Stay recommendations",
+                        "Food suggestions",
+                        "Transport options",
+                        "Budget breakdown",
+                      ]
+                    : [
+                        "Everything in Silver Plan",
+                        "Download itinerary as PDF",
+                        "Share on WhatsApp",
+                      ]
+                  ).map((line) => (
+                    <li key={line}>✓ {line}</li>
+                  ))}
+                </ul>
+                <button type="button" className={`price-cta ${plan.tone}`}>
+                  {planIndex === 0 ? "Choose Silver Plan" : "Choose Gold Plan"}
+                </button>
+              </div>
+            ))}
+          </div>
+          <div className="pricing-badges">
+            <span>🔒 Secure Payment</span>
+            <span>🛡️ Razorpay Secured</span>
+            <span>✅ 100% Safe</span>
+          </div>
+        </div>
+
+        <div className="faq-stack">
+          <h2>Frequently Asked Questions</h2>
+          <div className="faq-list">
+            {faqs.map((faq, index) => (
+              <button
+                key={faq.question}
+                type="button"
+                className={`faq-item ${openFaq === index ? "open" : ""}`}
+                onClick={() => setOpenFaq(openFaq === index ? null : index)}
+              >
+                <span>{faq.question}</span>
+                <ChevronDown size={16} />
+                {openFaq === index ? (
+                  <div className="faq-answer">{faq.answer}</div>
+                ) : null}
+              </button>
+            ))}
+          </div>
+          <div className="faq-help">
+            <strong>Still have questions?</strong>
+            <p>We’re here to help you plan your perfect trip.</p>
+            <a
+              className="faq-support-btn"
+              href="mailto:traveltuner.85@gmail.com"
+            >
+              Contact Support
+            </a>
+          </div>
+        </div>
+      </section>
+
+      <section className="cta-strip">
+        <div>
+          <strong>Ready to Plan Your Perfect Trip?</strong>
+          <p>Join thousands of travelers who plan smarter with Travel Tuner.</p>
+        </div>
+        <button
+          type="button"
+          className="cta-strip-btn"
+          onClick={handleGenerateTravelPlan}
+        >
+          Generate My Itinerary <ArrowRight size={18} />
+        </button>
+      </section>
+
+      <section className="bottom-trust-row">
+        {trustPoints.map((point) => {
+          const Icon = point.icon;
+          return (
+            <div className="bottom-trust-item" key={point.title}>
+              <span className="bottom-trust-icon">
+                <Icon size={18} />
+              </span>
+              <div>
+                <strong>{point.title}</strong>
+                <p>{point.text}</p>
+              </div>
+            </div>
+          );
+        })}
       </section>
 
       <section

@@ -24,6 +24,7 @@ import { setLoginReturnPath } from "../../lib/login-redirect";
 type ItineraryRecord = {
   id: string;
   createdAt: string;
+  isGlobal?: boolean;
   input?: {
     planId?: "silver" | "gold";
   };
@@ -135,6 +136,7 @@ function resolveItineraryPreview(item: ItineraryRecord): ItineraryPreview {
 export default function ItineraryListPage() {
   const [user, setUser] = useState<UserInfo>(null);
   const [items, setItems] = useState<ItineraryRecord[]>([]);
+  const [sampleItems, setSampleItems] = useState<ItineraryRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
   const [accountOpen, setAccountOpen] = useState(false);
@@ -143,9 +145,10 @@ export default function ItineraryListPage() {
   useEffect(() => {
     const load = async () => {
       try {
-        const [meRes, tripsRes] = await Promise.all([
+        const [meRes, tripsRes, samplesRes] = await Promise.all([
           fetch("/api/auth/me"),
           fetch("/api/itineraries"),
+          fetch("/api/home/sample-itineraries"),
         ]);
 
         if (meRes.ok) {
@@ -156,6 +159,11 @@ export default function ItineraryListPage() {
         if (tripsRes.ok) {
           const tripsData = await tripsRes.json();
           setItems(tripsData.itineraries || []);
+        }
+
+        if (samplesRes.ok) {
+          const sampleData = await samplesRes.json();
+          setSampleItems(sampleData.itineraries || []);
         }
       } finally {
         setLoading(false);
@@ -180,6 +188,23 @@ export default function ItineraryListPage() {
         .some((value) => String(value).toLowerCase().includes(term));
     });
   }, [items, query]);
+
+  const filteredSampleItems = useMemo(() => {
+    const term = query.trim().toLowerCase();
+    const globals = sampleItems.filter((item) => item.isGlobal);
+    if (!term) return globals;
+
+    return globals.filter((item) => {
+      const itinerary = resolveItineraryPreview(item);
+      return [
+        itinerary.destination,
+        itinerary.summary,
+        new Date(item.createdAt).toLocaleDateString(),
+      ]
+        .filter(Boolean)
+        .some((value) => String(value).toLowerCase().includes(term));
+    });
+  }, [sampleItems, query]);
 
   const cards: CardData[] = useMemo(
     () =>
@@ -217,6 +242,40 @@ export default function ItineraryListPage() {
         };
       }),
     [filteredItems],
+  );
+
+  const sampleCards: CardData[] = useMemo(
+    () =>
+      filteredSampleItems.map((item) => {
+        const itinerary = resolveItineraryPreview(item);
+        const daysCount = itinerary.days?.length || 12;
+        const adults = itinerary.travelerInfo?.adults ?? 2;
+        const children = itinerary.travelerInfo?.children ?? 0;
+        const totalEstimatedCost = itinerary.totalEstimatedCost ?? 126000;
+        const planId = itinerary.planId || "silver";
+
+        return {
+          id: item.id,
+          image: itinerary.coverImageUrl || "/itinery_result.png",
+          status: "",
+          title: itinerary.destination || "Sample itinerary",
+          tagline: itinerary.tagline || itinerary.summary || "Global sample itinerary",
+          subtitle: itinerary.summary || itinerary.travelerInfo?.pricingCalculatedFor || "Sample itinerary",
+          planId,
+          daysCount,
+          adults,
+          children,
+          totalEstimatedCost,
+          date: new Date(item.createdAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+            year: "numeric",
+          }),
+          action: "View Travel Plan",
+          tone: "",
+        };
+      }),
+    [filteredSampleItems],
   );
 
   const handleLogout = async () => {
@@ -574,6 +633,74 @@ export default function ItineraryListPage() {
             <div className="saved-state itineraries-state">
               Loading itineraries...
             </div>
+          ) : null}
+
+          {!loading && filteredSampleItems.length ? (
+            <section className="sample-itinerary-block">
+              <div className="sample-itinerary-block-head">
+                <div>
+                  <h2>Sample Itineraries</h2>
+                  <p>Global itineraries available to preview.</p>
+                </div>
+              </div>
+              <div className="itineraries-grid sample-itinerary-grid">
+                {sampleCards.map((card) => (
+                  <article className="itinerary-card sample-itinerary-card-wrap" key={card.id}>
+                    <div className={`itinerary-visual tone-${card.tone}`}>
+                      <img
+                        src={card.image}
+                        alt=""
+                        onError={(event) => {
+                          event.currentTarget.src = "/itinery_result.png";
+                        }}
+                      />
+                      <div
+                        className={`itinerary-plan-pill overlay ${card.planId === "gold" ? "is-gold" : "is-silver"}`}
+                      >
+                        <Trophy size={16} />
+                      </div>
+                      <Link
+                        href={`/result/${card.id}`}
+                        className="itinerary-card-link"
+                        aria-label={`Open ${card.title}`}
+                      />
+                    </div>
+
+                    <div className="itinerary-card-body">
+                      <h2>{card.title}</h2>
+                      <p className="itinerary-tagline">{card.tagline}</p>
+                      <div className="itinerary-details">
+                        <div className="itinerary-info">
+                          <div className="itinerary-detail-line">
+                            <CalendarDays size={14} />
+                            <span>{card.daysCount} Days</span>
+                          </div>
+
+                          <div className="itinerary-detail-line">
+                            <span>
+                              Total ₹{card.totalEstimatedCost.toLocaleString("en-IN")}
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="itinerary-detail-line total">
+                          <UserRound size={14} />
+                          <span>
+                            {card.adults} Adults {card.children} Children
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="itinerary-footer">
+                        <Link href={`/result/${card.id}`} className="view-button">
+                          View Sample <ArrowRight size={16} />
+                        </Link>
+                      </div>
+                    </div>
+                  </article>
+                ))}
+              </div>
+            </section>
           ) : null}
 
           <section className="itineraries-grid">

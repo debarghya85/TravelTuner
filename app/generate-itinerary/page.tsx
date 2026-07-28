@@ -435,6 +435,7 @@ export default function GenerateItineraryPage() {
                       price: "₹9",
                       title: "Silver",
                       copy: "Generate and view your itinerary",
+                      className: "silver",
                       features: [
                         "AI Generated Itinerary",
                         "Day-wise Plan",
@@ -446,6 +447,7 @@ export default function GenerateItineraryPage() {
                       price: "₹49",
                       title: "Gold",
                       copy: "Unlock download, share, and export",
+                      className: "gold",
                       features: [
                         "Everything in Silver",
                         "Download PDF",
@@ -456,7 +458,7 @@ export default function GenerateItineraryPage() {
                     <button
                       key={plan.id}
                       type="button"
-                      className={`plan-card ${form.planId === plan.id ? "selected" : ""}`}
+                      className={`plan-card ${plan.className} ${form.planId === plan.id ? "selected" : ""}`}
                       onClick={() =>
                         setForm((current) => ({
                           ...current,

@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { SiteHeader } from "../../components/SiteHeader";
+import { SiteFooter } from "../../components/SiteFooter";
 import {
   ArrowLeft,
   ArrowRight,
@@ -259,8 +261,12 @@ export default function ItineraryListPage() {
           image: itinerary.coverImageUrl || "/itinery_result.png",
           status: "",
           title: itinerary.destination || "Sample itinerary",
-          tagline: itinerary.tagline || itinerary.summary || "Global sample itinerary",
-          subtitle: itinerary.summary || itinerary.travelerInfo?.pricingCalculatedFor || "Sample itinerary",
+          tagline:
+            itinerary.tagline || itinerary.summary || "Global sample itinerary",
+          subtitle:
+            itinerary.summary ||
+            itinerary.travelerInfo?.pricingCalculatedFor ||
+            "Sample itinerary",
           planId,
           daysCount,
           adults,
@@ -645,7 +651,10 @@ export default function ItineraryListPage() {
               </div>
               <div className="itineraries-grid sample-itinerary-grid">
                 {sampleCards.map((card) => (
-                  <article className="itinerary-card sample-itinerary-card-wrap" key={card.id}>
+                  <article
+                    className="itinerary-card sample-itinerary-card-wrap"
+                    key={card.id}
+                  >
                     <div className={`itinerary-visual tone-${card.tone}`}>
                       <img
                         src={card.image}
@@ -678,7 +687,8 @@ export default function ItineraryListPage() {
 
                           <div className="itinerary-detail-line">
                             <span>
-                              Total ₹{card.totalEstimatedCost.toLocaleString("en-IN")}
+                              Total ₹
+                              {card.totalEstimatedCost.toLocaleString("en-IN")}
                             </span>
                           </div>
                         </div>
@@ -692,7 +702,10 @@ export default function ItineraryListPage() {
                       </div>
 
                       <div className="itinerary-footer">
-                        <Link href={`/result/${card.id}`} className="view-button">
+                        <Link
+                          href={`/result/${card.id}`}
+                          className="view-button"
+                        >
                           View Sample <ArrowRight size={16} />
                         </Link>
                       </div>

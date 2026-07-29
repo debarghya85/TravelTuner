@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
+import { SiteFooter } from "../components/SiteFooter";
 import {
   ArrowRight,
   BadgeCheck,
@@ -37,21 +38,40 @@ import {
 
 type SampleItinerary = {
   id: string;
+  _id?: string | { $oid?: string };
   createdAt: string;
   input?: {
     planId?: "silver" | "gold";
+    adults?: number;
+    children?: number;
+    days?: number;
+    destination?: string;
+    budget?: number;
   };
   output?: {
+    destination?: string;
+    tagline?: string;
+    coverImageUrl?: string;
+    summary?: string;
+    totalEstimatedCost?: number;
+    days?: unknown[];
+    planId?: "silver" | "gold";
+    travelerInfo?: {
+      adults?: number;
+      children?: number;
+    };
     itinerary?: {
       destination?: string;
       tagline?: string;
       coverImageUrl?: string;
       summary?: string;
       totalEstimatedCost?: number;
+      days?: unknown[];
       travelerInfo?: {
         adults?: number;
         children?: number;
       };
+      planId?: "silver" | "gold";
     };
   };
 };
@@ -398,21 +418,23 @@ export default function LandingPage() {
 
     const travelers: any =
       (outputAny.itinerary as any)?.travelerInfo || outputAny.travelerInfo;
-    const travelerData = travelers as Record<string, any>;
-    const adults = travelerData["adults"] ?? input.adults ?? 0;
-    const children = travelerData["children"] ?? input.children ?? 0;
+    const travelerData = travelers as any;
+    const adults = travelerData?.adults ?? input.adults ?? 0;
+    const children = travelerData?.children ?? input.children ?? 0;
 
     const days = Number(input.days ?? outputAny.days?.length ?? 0);
     const nights = Math.max(days - 1, 0);
 
-    const planId = outputAny.planId ?? outputAny.itinerary?.planId ?? input.planId;
+    const planId =
+      outputAny.planId ?? outputAny.itinerary?.planId ?? input.planId;
 
     return {
-      id: item._id?.$oid ?? item._id ?? item.id,
+      id: typeof item._id === "string" ? item._id : (item._id?.$oid ?? item.id),
 
       title: outputAny.destination ?? input.destination ?? "Sample itinerary",
 
-      tagline: outputAny.tagline ?? outputAny.summary ?? "Global sample itinerary",
+      tagline:
+        outputAny.tagline ?? outputAny.summary ?? "Global sample itinerary",
 
       image: outputAny.coverImageUrl ?? "/itinery_result.png",
 
@@ -446,7 +468,7 @@ export default function LandingPage() {
         <nav className="landing-nav" aria-label="Main navigation">
           <a href="#how-it-works">How It Works</a>
           <a href="#pricing-faq-grid">Pricing</a>
-          <a href="#pricing-faq-grid">FAQ</a>
+          <a href="#pricing-faq-grid">FAQs</a>
           {user ? (
             <>
               <Link href="/itineraries">My Travel Plans</Link>
@@ -983,7 +1005,7 @@ export default function LandingPage() {
               </button>
             ))}
           </div>
-          <div className="faq-help">
+          {/* <div className="faq-help">
             <strong>Still have questions?</strong>
             <p>We’re here to help you plan your perfect trip.</p>
             <a
@@ -992,7 +1014,7 @@ export default function LandingPage() {
             >
               Contact Support
             </a>
-          </div>
+          </div> */}
         </div>
       </section>
 
@@ -1149,6 +1171,7 @@ export default function LandingPage() {
 
       <span id="destinations" className="landing-anchor" />
       <span id="reviews" className="landing-anchor" />
+      <SiteFooter />
     </main>
   );
 }

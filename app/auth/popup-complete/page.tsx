@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect } from "react";
+import { Suspense, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 
-export default function AuthPopupCompletePage() {
+function AuthPopupCompleteContent() {
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -27,5 +27,21 @@ export default function AuthPopupCompletePage() {
         <p className="login-card-copy">Completing sign-in...</p>
       </section>
     </main>
+  );
+}
+
+export default function AuthPopupCompletePage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="login-shell scenic-shell">
+          <section className="login-card-pane login-card-pane--mobile">
+            <p className="login-card-copy">Completing sign-in...</p>
+          </section>
+        </main>
+      }
+    >
+      <AuthPopupCompleteContent />
+    </Suspense>
   );
 }

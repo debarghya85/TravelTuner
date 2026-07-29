@@ -2,6 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { SiteHeader } from "../../components/SiteHeader";
+import { SiteFooter } from "../../components/SiteFooter";
 import {
   ArrowLeft,
   Calendar,
@@ -305,6 +307,7 @@ export default function GenerateItineraryPage() {
 
   return (
     <main className="generator-page">
+      <SiteHeader backHref="/" backLabel="Back" />
       <div className="generator-page-bg" aria-hidden="true" />
       <section className="generator-shell">
         <div className="generator-layout">
@@ -323,20 +326,6 @@ export default function GenerateItineraryPage() {
           </div>
 
           <div className="generator-copy">
-            <div className="generator-desktop-actions">
-              <button
-                type="button"
-                className="generator-back-link"
-                aria-label="Go back to home"
-                onClick={handleHome}
-              >
-                <ArrowLeft size={18} />
-                <span>Back</span>
-              </button>
-            </div>
-
-            <img src="/tt_logo.png" alt="Travel Tuner" className="form-logo" />
-
             <form className="trip-builder-form" onSubmit={handleSubmit}>
               <div className="form-grid">
                 <label>
@@ -593,6 +582,7 @@ export default function GenerateItineraryPage() {
             </form>
           </div>
         </div>
+        <SiteFooter />
       </section>
     </main>
   );

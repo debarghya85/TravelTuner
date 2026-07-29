@@ -393,26 +393,30 @@ export default function LandingPage() {
 
   const sampleCards = sampleItineraries.map((item, index) => {
     const output = item.output ?? {};
+    const outputAny = output as any;
     const input = item.input ?? {};
 
-    const adults = output.travelerInfo?.adults ?? input.adults ?? 0;
-    const children = output.travelerInfo?.children ?? input.children ?? 0;
+    const travelers: any =
+      (outputAny.itinerary as any)?.travelerInfo || outputAny.travelerInfo;
+    const travelerData = travelers as Record<string, any>;
+    const adults = travelerData["adults"] ?? input.adults ?? 0;
+    const children = travelerData["children"] ?? input.children ?? 0;
 
-    const days = Number(input.days ?? output.days?.length ?? 0);
+    const days = Number(input.days ?? outputAny.days?.length ?? 0);
     const nights = Math.max(days - 1, 0);
 
-    const planId = output.planId ?? output.itinerary?.planId ?? input.planId;
+    const planId = outputAny.planId ?? outputAny.itinerary?.planId ?? input.planId;
 
     return {
       id: item._id?.$oid ?? item._id ?? item.id,
 
-      title: output.destination ?? input.destination ?? "Sample itinerary",
+      title: outputAny.destination ?? input.destination ?? "Sample itinerary",
 
-      tagline: output.tagline ?? output.summary ?? "Global sample itinerary",
+      tagline: outputAny.tagline ?? outputAny.summary ?? "Global sample itinerary",
 
-      image: output.coverImageUrl ?? "/itinery_result.png",
+      image: outputAny.coverImageUrl ?? "/itinery_result.png",
 
-      budget: output.totalEstimatedCost ?? input.budget ?? 0,
+      budget: outputAny.totalEstimatedCost ?? input.budget ?? 0,
 
       travelers: adults + children,
 
@@ -869,7 +873,7 @@ export default function LandingPage() {
           ))}
         </div>
 
-        <a className="view-all-samples" href="/itineraries">
+        <a className="view-all-samples" href="/sample-itineraries">
           View All Sample Itineraries <ArrowRight size={16} />
         </a>
       </section>

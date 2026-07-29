@@ -3799,6 +3799,243 @@ input[type="range"]::-moz-range-thumb {
   margin-top: 10px;
 }
 
+.sample-itineraries-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, rgba(73, 123, 255, 0.12), transparent 28%),
+    linear-gradient(180deg, #f7f9ff 0%, #ffffff 40%, #f6f9ff 100%);
+}
+
+.sample-itineraries-hero {
+  padding: 34px 18px 42px;
+}
+
+.sample-itineraries-wrap {
+  max-width: 1180px;
+  margin: 0 auto;
+}
+
+.sample-itineraries-header {
+  text-align: center;
+}
+
+.sample-itineraries-header h1 {
+  margin: 0;
+  color: #132359;
+  font-size: 36px;
+  line-height: 1.08;
+  font-weight: 700;
+}
+
+.sample-itineraries-header p {
+  margin: 8px 0 0;
+  color: #5d6d91;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.sample-itineraries-grid--four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 22px;
+}
+
+.sample-itinerary-card--large {
+  border-radius: 15px;
+  box-shadow: 0 14px 34px rgba(22, 52, 110, 0.08);
+}
+
+.sample-itinerary-image--large {
+  min-height: 218px;
+  padding: 16px;
+}
+
+.sample-itinerary-body--large {
+  padding: 14px 14px 15px;
+  gap: 14px;
+}
+
+.sample-meta--large strong {
+  font-size: 14px;
+}
+
+.sample-meta--large p {
+  font-size: 12px;
+}
+
+.sample-view-btn {
+  text-decoration: none;
+}
+
+.comparison-panel {
+  margin-top: 24px;
+  padding: 18px 16px 20px;
+  border: 1px solid #e4ebf8;
+  border-radius: 18px;
+  background: #efefef;
+  box-shadow: 0 16px 38px rgba(21, 55, 120, 0.06);
+}
+
+.comparison-panel h2 {
+  margin: 0 0 16px;
+  color: #132359;
+  text-align: center;
+  font-size: 24px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 88px minmax(0, 1fr);
+  align-items: center;
+  gap: 16px;
+}
+
+.comparison-card {
+  min-height: 152px;
+  padding: 16px 18px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+}
+
+.comparison-card--bad {
+  background: #fff6f5;
+  border-color: #f2d6d2;
+  margin-left: 160px ;
+}
+
+.comparison-card--good {
+  background: #f7fff4;
+  border-color: #d9e8d0;
+  margin-right: 160px;
+}
+
+.comparison-card-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  color: #e13a2b;
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.comparison-card--good .comparison-card-title {
+  color: #2c8f43;
+}
+
+.comparison-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.comparison-icon--bad {
+  background: #ff5d5d;
+}
+
+.comparison-icon--good {
+  background: #66b87a;
+}
+
+.comparison-card ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.comparison-card li {
+  position: relative;
+  padding-left: 22px;
+  color: #4e5b73;
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.55;
+}
+
+.comparison-card li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: inherit;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.comparison-card--bad li::before {
+  content: "✕";
+  color: #ef5a50;
+}
+
+.comparison-card--good li::before {
+  color: #33a04c;
+}
+
+.comparison-vs {
+  display: grid;
+  place-items: center;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto;
+  border-radius: 50%;
+  border: 1px solid #d7dff0;
+  color: #132359;
+  background: #fff;
+  font-size: 19px;
+  font-weight: 700;
+  box-shadow: 0 8px 22px rgba(20, 43, 92, 0.08);
+}
+
+.sample-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 18px;
+  padding: 14px 10px;
+  border-top: 1px solid #edf2fb;
+  border-bottom: 1px solid #edf2fb;
+  background: linear-gradient(180deg, #fff, #fbfcff);
+}
+
+.sample-stat {
+  text-align: center;
+}
+
+.sample-stat strong {
+  display: block;
+  color: #4a4ffd;
+  font-size: 28px;
+  line-height: 1.1;
+  font-weight: 900;
+}
+
+.sample-stat span {
+  color: #6c7894;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.sample-itineraries-footer {
+  margin-top: 14px;
+  text-align: center;
+}
+
+.sample-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #2f66ff;
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+}
+
 .sample-itinerary-card {
   overflow: hidden;
   border: 1px solid #dfe8f7;
@@ -3855,6 +4092,11 @@ input[type="range"]::-moz-range-thumb {
 .sample-view-btn.blue {
   background: linear-gradient(135deg, #2f66ff, #2949d3);
 }
+.sample-itinerary-pill.violet,
+.sample-view-btn.violet {
+ background: linear-gradient(135deg, #590e4d, #e639b4);
+}
+    
 
 .sample-itinerary-pill.green,
 .sample-view-btn.green {

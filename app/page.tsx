@@ -34,6 +34,8 @@ import {
   Bell,
   UserRound,
   Smartphone,
+  Mail,
+  Home,
 } from "lucide-react";
 
 type SampleItinerary = {
@@ -468,7 +470,7 @@ export default function LandingPage() {
         <nav className="landing-nav" aria-label="Main navigation">
           <a href="#how-it-works">How It Works</a>
           <a href="#pricing-faq-grid">Pricing</a>
-          <a href="#pricing-faq-grid">FAQs</a>
+          <a href="#faq-stack">FAQs</a>
           {user ? (
             <>
               <Link href="/itineraries">My Travel Plans</Link>
@@ -641,6 +643,13 @@ export default function LandingPage() {
                   </div>
                 </div>
 
+                <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Home size={18} />
+                  </span>
+                  <strong>Home</strong>
+                  <ChevronRight size={20} />
+                </Link>
                 <a
                   href="#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
@@ -653,6 +662,17 @@ export default function LandingPage() {
                 </a>
 
                 <a
+                  href="/sample-itineraries"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <TicketCheck size={18} />
+                  </span>
+                  <strong>Sample Itineraries</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <a
                   href="#pricing-faq-grid"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -660,6 +680,14 @@ export default function LandingPage() {
                     <CircleDollarSign size={18} />
                   </span>
                   <strong>Pricing</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <a href="#faq-stack" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <ChevronDown size={18} />
+                  </span>
+                  <strong>FAQs</strong>
                   <ChevronRight size={20} />
                 </a>
 
@@ -674,6 +702,14 @@ export default function LandingPage() {
                   <ChevronRight size={20} />
                 </Link>
 
+                {/* <a href="/contact" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Mail size={18} />
+                  </span>
+                  <strong>Contact Us</strong>
+                  <ChevronRight size={20} />
+                </a> */}
+
                 <button
                   type="button"
                   className="landing-mobile-menu-logout"
@@ -687,6 +723,14 @@ export default function LandingPage() {
               </>
             ) : (
               <>
+                <Link href="/" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Home size={18} />
+                  </span>
+                  <strong>Home</strong>
+                  <ChevronRight size={20} />
+                </Link>
+
                 <a
                   href="#how-it-works"
                   onClick={() => setMobileMenuOpen(false)}
@@ -699,6 +743,17 @@ export default function LandingPage() {
                 </a>
 
                 <a
+                  href="/sample-itineraries"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <TicketCheck size={18} />
+                  </span>
+                  <strong>Sample Itineraries</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <a
                   href="#pricing-faq-grid"
                   onClick={() => setMobileMenuOpen(false)}
                 >
@@ -706,6 +761,14 @@ export default function LandingPage() {
                     <CircleDollarSign size={18} />
                   </span>
                   <strong>Pricing</strong>
+                  <ChevronRight size={20} />
+                </a>
+
+                <a href="#faq-stack" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <ChevronDown size={18} />
+                  </span>
+                  <strong>FAQs</strong>
                   <ChevronRight size={20} />
                 </a>
 
@@ -723,6 +786,14 @@ export default function LandingPage() {
                   <strong>Login</strong>
                   <ChevronRight size={20} />
                 </button>
+
+                {/* <a href="/contact" onClick={() => setMobileMenuOpen(false)}>
+                  <span className="landing-mobile-menu-item-icon">
+                    <Mail size={18} />
+                  </span>
+                  <strong>Contact Us</strong>
+                  <ChevronRight size={20} />
+                </a> */}
               </>
             )}
           </div>
@@ -975,7 +1046,7 @@ export default function LandingPage() {
                   ))}
                 </ul>
                 <button type="button" className={`price-cta ${plan.tone}`}>
-                  {planIndex === 0 ? "Choose Silver Plan" : "Choose Gold Plan"}
+                  {planIndex === 0 ? "Silver Plan" : "Gold Plan"}
                 </button>
               </div>
             ))}
@@ -987,7 +1058,7 @@ export default function LandingPage() {
           </div>
         </div>
 
-        <div className="faq-stack">
+        <div className="faq-stack" id="faq-stack">
           <h2>Frequently Asked Questions</h2>
           <div className="faq-list">
             {faqs.map((faq, index) => (

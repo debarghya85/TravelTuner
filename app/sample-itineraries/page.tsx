@@ -1,47 +1,49 @@
 "use client";
+
 import Link from "next/link";
-import { ArrowRight, Plane, Sparkles } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { ArrowRight, Sparkles } from "lucide-react";
 import { SiteHeader } from "../../components/SiteHeader";
 import { SiteFooter } from "../../components/SiteFooter";
 
-const sampleCards = [
-  {
-    id: "bali",
-    title: "Bali",
-    image: "/home-1.jpg",
-    duration: "4 Days / 3 Nights",
-    budget: "Budget: ₹95,200",
-    travelers: "2 Adults · 1 Children",
-    accent: "blue",
-  },
-  {
-    id: "darjeeling",
-    title: "Darjeeling",
-    image: "/home-2.jpg",
-    duration: "4 Days / 3 Nights",
-    budget: "Budget: ₹37,100",
-    travelers: "2 Adults · 1 Children",
-    accent: "green",
-  },
-  {
-    id: "rajasthan",
-    title: "Rajasthan",
-    image: "/home-3.jpg",
-    duration: "7 Days / 6 Nights",
-    budget: "Budget: ₹90,000",
-    travelers: "2 Adults · 1 Children",
-    accent: "amber",
-  },
-  {
-    id: "goa",
-    title: "Goa",
-    image: "/home-4.jpg",
-    duration: "5 Days / 4 Nights",
-    budget: "Budget: ₹54,000",
-    travelers: "2 Adults · 0 Children",
-    accent: "violet",
-  },
-];
+type SampleItinerary = {
+  id: string;
+  createdAt: string;
+  input?: {
+    planId?: "silver" | "gold";
+    adults?: number;
+    children?: number;
+    days?: number;
+    destination?: string;
+    budget?: number;
+  };
+  output?: {
+    destination?: string;
+    tagline?: string;
+    coverImageUrl?: string;
+    summary?: string;
+    totalEstimatedCost?: number;
+    days?: unknown[];
+    planId?: "silver" | "gold";
+    travelerInfo?: {
+      adults?: number;
+      children?: number;
+    };
+    itinerary?: {
+      destination?: string;
+      tagline?: string;
+      coverImageUrl?: string;
+      summary?: string;
+      totalEstimatedCost?: number;
+      days?: unknown[];
+      travelerInfo?: {
+        adults?: number;
+        children?: number;
+      };
+      planId?: "silver" | "gold";
+    };
+  };
+};
 
 const includedFeatures = [
   {
@@ -75,45 +77,126 @@ const includedFeatures = [
   { title: "Shopping Guide", text: "Best places to shop", icon: "shopping" },
 ];
 
+const accentColors = ["blue", "green", "amber", "violet", "indigo"];
+
 export default function SampleItinerariesPage() {
+  const [sampleItineraries, setSampleItineraries] = useState<SampleItinerary[]>(
+    [],
+  );
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadSamples = async () => {
+      try {
+        setLoading(true);
+        const res = await fetch("/api/home/sample-itineraries");
+        if (!res.ok) {
+          throw new Error("Failed to load sample itineraries");
+        }
+        const data = await res.json();
+        setSampleItineraries(
+          Array.isArray(data.itineraries) ? data.itineraries : [],
+        );
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to load sample itineraries",
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSamples();
+  }, []);
+
+  const sampleCards = useMemo(() => {
+    return sampleItineraries.map((item, index) => {
+      const output = item.output ?? {};
+      const outputAny = output as any;
+      const input = item.input ?? {};
+      const travelers =
+        (outputAny.itinerary as any)?.travelerInfo || outputAny.travelerInfo;
+      const travelerData = travelers as any;
+      const adults = travelerData?.adults ?? input.adults ?? 0;
+      const children = travelerData?.children ?? input.children ?? 0;
+      const days = Number(input.days ?? outputAny.days?.length ?? 0);
+      const nights = Math.max(days - 1, 0);
+      const planId =
+        outputAny.planId ?? outputAny.itinerary?.planId ?? input.planId;
+
+      return {
+        id: item.id,
+        title: outputAny.destination ?? input.destination ?? "Sample itinerary",
+        tagline:
+          outputAny.tagline ?? outputAny.summary ?? "Global sample itinerary",
+        image: outputAny.coverImageUrl ?? "/itinery_result.png",
+        budget: outputAny.totalEstimatedCost ?? input.budget ?? 0,
+        adults,
+        children,
+        planLabel: `${days} ${days === 1 ? "Day" : "Days"} / ${nights} ${nights === 1 ? "Night" : "Nights"}`,
+        accent: accentColors[index % accentColors.length],
+        planId,
+      };
+    });
+  }, [sampleItineraries]);
+
   return (
     <main className="sample-mockup-page">
       <SiteHeader backHref="/" backLabel="Back" />
 
       <section className="sample-mockup-hero">
         <h1>See What You&apos;ll Get</h1>
-        <p>
-          Explore sample itineraries created by our AI for amazing destinations.
-        </p>
+        <p>Explore real sample itineraries pulled from the database.</p>
       </section>
 
       <section className="sample-mockup-grid" aria-label="Sample itineraries">
-        {sampleCards.map((card) => (
-          <article className="sample-mockup-card" key={card.id}>
-            <div
-              className="sample-mockup-card-media"
-              style={{ backgroundImage: `url("${card.image}")` }}
-            >
-              <div className={`sample-mockup-duration ${card.accent}`}>
-                {card.duration}
-              </div>
-              <h3>{card.title}</h3>
-            </div>
-            <div className="sample-mockup-card-body">
-              <p>{card.budget}</p>
-              <span>{card.travelers}</span>
-            </div>
-            <div className="sample-mockup-card-footer">
-              <Link
-                href={`/result/${card.id}`}
-                className={`sample-mockup-view ${card.accent}`}
+        {loading ? (
+          <div className="sample-mockup-panel" style={{ gridColumn: "1 / -1" }}>
+            Loading sample itineraries...
+          </div>
+        ) : error ? (
+          <div className="sample-mockup-panel" style={{ gridColumn: "1 / -1" }}>
+            {error}
+          </div>
+        ) : sampleCards.length ? (
+          sampleCards.map((card) => (
+            <article className="sample-mockup-card" key={card.id}>
+              <div
+                className="sample-mockup-card-media"
+                style={{ backgroundImage: `url("${card.image}")` }}
               >
-                View Sample
-                <ArrowRight size={18} />
-              </Link>
-            </div>
-          </article>
-        ))}
+                <div className={`sample-mockup-duration ${card.accent}`}>
+                  {card.planLabel}
+                </div>
+                <h3>{card.title}</h3>
+              </div>
+              <div className="sample-mockup-card-body">
+                <p>
+                  Budget: Rs {Number(card.budget || 0).toLocaleString("en-IN")}
+                </p>
+                <span>
+                  {card.adults || 0} Adults, {card.children || 0} Children
+                </span>
+              </div>
+              <div className="sample-mockup-card-footer">
+                <Link
+                  href={`/result/${card.id}`}
+                  className={`sample-mockup-view ${card.accent}`}
+                >
+                  View Sample
+                  <ArrowRight size={18} />
+                </Link>
+              </div>
+            </article>
+          ))
+        ) : (
+          <div className="sample-mockup-panel" style={{ gridColumn: "1 / -1" }}>
+            No sample itineraries found yet.
+          </div>
+        )}
       </section>
 
       <section className="sample-mockup-panel">
@@ -138,41 +221,6 @@ export default function SampleItinerariesPage() {
               </div>
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="sample-mockup-compare">
-        <h2>Without Travel Tuner vs With Travel Tuner</h2>
-        <div className="sample-mockup-compare-grid">
-          <div className="sample-mockup-compare-card sample-mockup-compare-card-bad">
-            <div className="sample-mockup-compare-title bad">
-              <span>×</span>
-              Without Travel Tuner
-            </div>
-            <ul>
-              <li>20+ tabs open</li>
-              <li>Hours of searching</li>
-              <li>Budget confusion</li>
-              <li>Missed experiences</li>
-              <li>Stressful planning</li>
-            </ul>
-          </div>
-
-          <div className="sample-mockup-vs">VS</div>
-
-          <div className="sample-mockup-compare-card sample-mockup-compare-card-good">
-            <div className="sample-mockup-compare-title good">
-              <span>✓</span>
-              With Travel Tuner
-            </div>
-            <ul>
-              <li>AI-powered itinerary</li>
-              <li>Everything in one place</li>
-              <li>Accurate budget</li>
-              <li>Best experiences</li>
-              <li>Plan in under a minute!</li>
-            </ul>
-          </div>
         </div>
       </section>
 

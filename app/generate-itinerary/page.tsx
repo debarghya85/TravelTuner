@@ -1,5 +1,5 @@
 "use client";
-
+import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { SiteHeader } from "../../components/SiteHeader";
@@ -8,6 +8,8 @@ import {
   ArrowLeft,
   Calendar,
   Home,
+  ChevronDown,
+  LogOut,
   MapPin,
   Minus,
   Plane,
@@ -18,6 +20,11 @@ import {
   Lock,
   Users,
   Wallet,
+  UserRound,
+  ChevronRight,
+  TicketCheck,
+  Bell,
+  CircleDollarSign,
 } from "lucide-react";
 import { openRazorpayCheckout } from "../../lib/razorpay-client";
 
@@ -33,14 +40,57 @@ type TripForm = {
   preferences: string;
 };
 
+type AuthUser = {
+  displayName?: string | null;
+  email?: string | null;
+  photoURL?: string | null;
+  provider?: "google" | "facebook" | "email" | "unknown";
+} | null;
+
+function UserAvatar({
+  src,
+  alt,
+  className,
+  fallbackClassName = "nav-avatar-fallback",
+}: {
+  src?: string | null;
+  alt: string;
+  className?: string;
+  fallbackClassName?: string;
+}) {
+  const imageSrc = src || "/default-avatar.svg";
+  return (
+    <img
+      src={imageSrc}
+      alt={alt}
+      className={className}
+      referrerPolicy="no-referrer"
+      loading="eager"
+      decoding="async"
+      onError={(event) => {
+        const target = event.currentTarget;
+        if (target.dataset.fallbackApplied === "1") return;
+        target.dataset.fallbackApplied = "1";
+        target.src = "/default-avatar.svg";
+        target.className = className
+          ? `${className} ${fallbackClassName}`
+          : fallbackClassName;
+      }}
+    />
+  );
+}
+
 export default function GenerateItineraryPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [checkoutLoading, setCheckoutLoading] = useState(false);
+  const [user, setUser] = useState<AuthUser>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const [adultInfo, setAdultInfo] = useState("");
   const [childrenInfo, setChildrenInfo] = useState("");
   const popupRef = useRef<Window | null>(null);
   const authResolverRef = useRef<((value: boolean) => void) | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
   const [form, setForm] = useState<TripForm>({
     source: "",
     destination: "",
@@ -56,10 +106,37 @@ export default function GenerateItineraryPage() {
   const handleBack = () => {
     router.push("/");
   };
-
+  const handleDirectLogin = () => {
+    window.location.href = "/api/auth/start/google?returnTo=%2F";
+  };
   const handleHome = () => {
     router.push("/");
   };
+
+  const handleLogin = () => {
+    window.location.href =
+      "/api/auth/start/google?returnTo=%2Fgenerate-itinerary";
+  };
+
+  const handleLogout = async () => {
+    const response = await fetch("/api/auth/logout", { method: "POST" });
+    if (!response.ok) return;
+    setUser(null);
+    setMenuOpen(false);
+    router.replace("/");
+    router.refresh();
+  };
+
+  useEffect(() => {
+    const loadUser = async () => {
+      const response = await fetch("/api/auth/me");
+      if (!response.ok) return;
+      const data = await response.json();
+      setUser(data.user || null);
+    };
+
+    loadUser();
+  }, []);
 
   useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
@@ -73,6 +150,17 @@ export default function GenerateItineraryPage() {
 
     window.addEventListener("message", handleMessage);
     return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
+  useEffect(() => {
+    const onPointerDown = (event: MouseEvent) => {
+      if (!menuRef.current?.contains(event.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", onPointerDown);
+    return () => document.removeEventListener("mousedown", onPointerDown);
   }, []);
 
   const handleChange = (
@@ -321,7 +409,204 @@ export default function GenerateItineraryPage() {
               <ArrowLeft size={20} />
             </button>
             <div className="mobile-brand-lockup" aria-hidden="true">
-              <img src="/tt_logo.png" alt="" />
+              <img src="/tt_gi_logo.png" alt="" />
+            </div>
+            <div className="mobile-header-auth" ref={menuRef}>
+              {user ? (
+                <>
+                  <button
+                    type="button"
+                    className="mobile-header-user"
+                    onClick={() => setMenuOpen((current) => !current)}
+                    aria-expanded={menuOpen}
+                    aria-haspopup="menu"
+                  >
+                    <span className="mobile-header-avatar">
+                      <UserAvatar
+                        src={user.photoURL}
+                        alt={user.displayName || "User"}
+                        className="nav-avatar-img"
+                      />
+                    </span>
+
+                    <ChevronDown size={18} />
+                  </button>
+                  {/* {menuOpen ? (
+                    <div className="mobile-header-menu" role="menu">
+                      <div className="mobile-header-menu-head">
+                        <strong>
+                          {user.displayName || user.email || "Traveler"}
+                        </strong>
+                        <span>
+                          {user.provider === "unknown"
+                            ? "Logged in"
+                            : `Logged in with ${user.provider}`}
+                        </span>
+                      </div>
+                      <a href="#how-it-works">
+                        <span className="landing-mobile-menu-item-icon">
+                          <Bell size={18} />
+                        </span>
+                        <strong>How It Works</strong>
+                        <ChevronRight size={20} />
+                      </a>
+                      <a href="/sample-itineraries">
+                        <span className="landing-mobile-menu-item-icon">
+                          <TicketCheck size={18} />
+                        </span>
+                        <strong>Sample Itineraries</strong>
+                        <ChevronRight size={20} />
+                      </a>
+
+                      <a href="#faq-stack">
+                        <span className="landing-mobile-menu-item-icon">
+                          <ChevronDown size={18} />
+                        </span>
+                        <strong>FAQs</strong>
+                        <ChevronRight size={20} />
+                      </a>
+                      <button
+                        type="button"
+                        className="mobile-header-menu-item"
+                        onClick={handleLogout}
+                      >
+                        <LogOut size={16} />
+                        <span>Logout</span>
+                      </button>
+                    </div>
+                  ) : null} */}
+                  {menuOpen ? (
+                    <>
+                      <button
+                        type="button"
+                        className="result-menu-backdrop"
+                        aria-label="Close menu"
+                      />
+                      <div
+                        className={`landing-mobile-menu${user ? " is-logged-in" : ""}`}
+                        id="landing-mobile-menu"
+                        role="menu"
+                      >
+                        {user ? (
+                          <>
+                            <div className="landing-mobile-menu-user-card">
+                              <span className="landing-mobile-menu-user-avatar">
+                                <UserAvatar
+                                  src={user.photoURL}
+                                  alt={user.displayName || "User"}
+                                  className="landing-mobile-menu-user-avatar-img"
+                                  fallbackClassName="landing-mobile-menu-user-avatar-fallback"
+                                />
+                              </span>
+                              <div>
+                                <strong>
+                                  {user.displayName || user.email || "Traveler"}
+                                </strong>
+                                <p>
+                                  {user.provider === "unknown"
+                                    ? "Logged in"
+                                    : `Logged in with ${user.provider}`}
+                                </p>
+                              </div>
+                            </div>
+                            <Link href="/">
+                              <span className="landing-mobile-menu-item-icon">
+                                <Home size={18} />
+                              </span>
+                              <strong>Home</strong>
+                              <ChevronRight size={20} />
+                            </Link>
+
+                            <a href="/sample-itineraries">
+                              <span className="landing-mobile-menu-item-icon">
+                                <TicketCheck size={18} />
+                              </span>
+                              <strong>Sample Itineraries</strong>
+                              <ChevronRight size={20} />
+                            </a>
+
+                            <a href="/#faq-stack">
+                              <span className="landing-mobile-menu-item-icon">
+                                <ChevronDown size={18} />
+                              </span>
+                              <strong>FAQs</strong>
+                              <ChevronRight size={20} />
+                            </a>
+
+                            <Link href="/itineraries">
+                              <span className="landing-mobile-menu-item-icon">
+                                <TicketCheck size={18} />
+                              </span>
+                              <strong>My Travel Plans</strong>
+                              <ChevronRight size={20} />
+                            </Link>
+
+                            <button
+                              type="button"
+                              className="landing-mobile-menu-logout"
+                              onClick={handleLogout}
+                            >
+                              <span className="landing-mobile-menu-item-icon">
+                                <LogOut size={18} />
+                              </span>
+                              <strong>Logout</strong>
+                            </button>
+                          </>
+                        ) : (
+                          <>
+                            <Link href="/">
+                              <span className="landing-mobile-menu-item-icon">
+                                <Home size={18} />
+                              </span>
+                              <strong>Home</strong>
+                              <ChevronRight size={20} />
+                            </Link>
+
+                            <a href="/sample-itineraries">
+                              <span className="landing-mobile-menu-item-icon">
+                                <TicketCheck size={18} />
+                              </span>
+                              <strong>Sample Itineraries</strong>
+                              <ChevronRight size={20} />
+                            </a>
+
+                            <a href="/#faq-stack">
+                              <span className="landing-mobile-menu-item-icon">
+                                <ChevronDown size={18} />
+                              </span>
+                              <strong>FAQs</strong>
+                              <ChevronRight size={20} />
+                            </a>
+
+                            <button
+                              type="button"
+                              className="landing-mobile-menu-login"
+                              onClick={() => {
+                                handleDirectLogin();
+                              }}
+                            >
+                              <span className="landing-mobile-menu-item-icon">
+                                <UserRound size={18} />
+                              </span>
+                              <strong>Login</strong>
+                              <ChevronRight size={20} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </>
+                  ) : null}
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="mobile-header-signin"
+                  onClick={handleLogin}
+                >
+                  <UserRound size={18} />
+                  <span>Sign In</span>
+                </button>
+              )}
             </div>
           </div>
 

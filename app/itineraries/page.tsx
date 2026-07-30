@@ -20,6 +20,7 @@ import {
   Settings,
   Sparkles,
   UserRound,
+  TicketCheck,
 } from "lucide-react";
 import { setLoginReturnPath } from "../../lib/login-redirect";
 
@@ -381,6 +382,16 @@ export default function ItineraryListPage() {
                   <strong>My Travel Plans</strong>
                   <span className="landing-mobile-menu-link-arrow">›</span>
                 </Link>
+                <a
+                  href="/sample-itineraries"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span className="landing-mobile-menu-item-icon">
+                    <TicketCheck size={18} />
+                  </span>
+                  <strong>Sample Itineraries</strong>
+                  <ChevronRight size={20} />
+                </a>
 
                 <button
                   type="button"

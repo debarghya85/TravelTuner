@@ -216,8 +216,9 @@ export function ResultFrame({
     useState(true);
   const [user, setUser] = useState<UserInfo>(null);
   const [isMobileViewport, setIsMobileViewport] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const consumedSilverPopoverRef = useRef(false);
-  const storedContext = readStoredItineraryContext();
+  const storedContext = hasMounted ? readStoredItineraryContext() : null;
   const itinerary = storedContext?.itinerary || null;
   const resolvedItineraryId = itineraryId || storedContext?.itineraryId || null;
   const resolvedPlanId = normalizePlanTier(
@@ -225,6 +226,10 @@ export function ResultFrame({
   );
   const isPremiumPlan = resolvedPlanId === "gold";
   const silverPopoverStorageKey = "travel-tuner:show-silver-upgrade-popover";
+
+  useEffect(() => {
+    setHasMounted(true);
+  }, []);
 
   useEffect(() => {
     const loadUser = async () => {
@@ -724,9 +729,9 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-share2 lucide-share-2"
                   aria-hidden="true"
                 >
@@ -750,9 +755,9 @@ ${formatMoney(day.estimatedDayCost)}\n\n`;
                   viewBox="0 0 24 24"
                   fill="none"
                   stroke="currentColor"
-                  stroke-width="2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                   className="lucide lucide-download"
                   aria-hidden="true"
                 >

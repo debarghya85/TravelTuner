@@ -342,7 +342,7 @@ export default function LandingPage() {
   const [sampleItineraries, setSampleItineraries] = useState<SampleItinerary[]>(
     [],
   );
-  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [profileOpen, setProfileOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement | null>(null);

@@ -127,7 +127,7 @@ export function SiteHeader({ backHref, backLabel = "Back" }: SiteHeaderProps) {
                   className="nav-avatar-img"
                 />
               </span>
-              <span>{user.displayName || user.email || "Traveler"}</span>
+              <span id="username">{user.displayName || user.email || "Traveler"}</span>
               <ChevronDown size={16} />
             </button>
 

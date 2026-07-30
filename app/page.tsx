@@ -551,7 +551,7 @@ export default function LandingPage() {
               type="button"
               className="gsi-material-button header-google-login"
               onClick={handleDirectLogin}
-              aria-label="Sign in with Google"
+              aria-label="Sign in"
             >
               <div className="gsi-material-button-state" />
               <div className="gsi-material-button-content-wrapper">
@@ -582,10 +582,8 @@ export default function LandingPage() {
                     <path fill="none" d="M0 0h48v48H0z" />
                   </svg>
                 </div>
-                <span className="gsi-material-button-contents">
-                  Sign in with Google
-                </span>
-                <span style={{ display: "none" }}>Sign in with Google</span>
+                <span className="gsi-material-button-contents">Sign in</span>
+                <span style={{ display: "none" }}>Sign in</span>
               </div>
             </button>
           )}
